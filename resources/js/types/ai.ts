@@ -17,6 +17,8 @@ export interface AiDriverOption {
   value: string
   label: string
   website: string
+  requires_api_key: boolean
+  global_only: boolean
   default_base_url: string
   supported_roles: string[]
   suggested_models: AiSuggestedModel[]

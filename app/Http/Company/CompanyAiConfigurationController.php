@@ -24,6 +24,10 @@ final class CompanyAiConfigurationController extends AiConfigurationController
         $this->authorizeAbility('owner only');
         $companyId = (int) $request->header('company');
         $values = $request->validated();
+        if (($values['use_custom_ai_config'] ?? 'NO') === 'YES'
+            && $this->configuration->driverIsGlobalOnly((string) ($values['ai_driver'] ?? ''))) {
+            return response()->json(['error' => 'global_only_driver', 'message' => 'This provider can only be set by a super admin.'], 422);
+        }
         if (in_array($values['ai_api_key'] ?? '', ['', '********'], true)) {
             $values['ai_api_key'] = $this->configuration->getCompanyConfig($companyId)['ai_api_key'];
         }
@@ -35,6 +39,10 @@ final class CompanyAiConfigurationController extends AiConfigurationController
     public function testConnection(ConnectionTestRequest $request): JsonResponse
     {
         $this->authorizeAbility('owner only');
+
+        if ($this->configuration->driverIsGlobalOnly((string) $request->validated()['ai_driver'])) {
+            return response()->json(['error' => 'global_only_driver', 'message' => 'This provider can only be set by a super admin.'], 422);
+        }
 
         return $this->testConfiguration($request->validated(), $this->configuration->getCompanyConfig((int) $request->header('company')));
     }

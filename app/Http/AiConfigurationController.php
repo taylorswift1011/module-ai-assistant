@@ -19,7 +19,7 @@ abstract class AiConfigurationController extends ModuleController
         $key = $values['ai_api_key'] ?? '';
         $key = in_array($key, ['', '********'], true) ? ($stored['ai_api_key'] ?? '') : $key;
 
-        if ($key === '') {
+        if ($key === '' && $this->configuration->driverRequiresApiKey((string) $values['ai_driver'])) {
             return response()->json(['error' => 'missing_api_key'], 422);
         }
 

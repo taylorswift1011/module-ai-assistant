@@ -26,6 +26,7 @@ use Modules\AiAssistant\Application\Tools\RankTopItemsTool;
 use Modules\AiAssistant\Application\Tools\SearchCustomersTool;
 use Modules\AiAssistant\Application\Tools\SearchInvoicesTool;
 use Modules\AiAssistant\Application\Tools\SearchItemsTool;
+use Modules\AiAssistant\Drivers\ClaudeCliDriver;
 use Modules\AiAssistant\Drivers\OpenRouterDriver;
 use Modules\AiAssistant\Lifecycle\DataCleanup;
 
@@ -81,6 +82,20 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
                 'label' => 'Base URL',
                 'default' => 'https://openrouter.ai/api/v1',
             ]],
+        ]);
+        Registry::registerAiDriver('claude_cli', [
+            'class' => ClaudeCliDriver::class,
+            'label' => 'Claude Code (subscription login)',
+            'website' => '',
+            'requires_api_key' => false,
+            'global_only' => true,
+            'supported_roles' => ['chat', 'text_generation'],
+            'suggested_models' => [
+                ['value' => 'sonnet', 'label' => 'Claude Sonnet (latest)'],
+                ['value' => 'haiku', 'label' => 'Claude Haiku (latest)'],
+                ['value' => 'opus', 'label' => 'Claude Opus (latest)'],
+            ],
+            'config_fields' => [],
         ]);
         $this->app->bind(DataCleanup::class, fn (Application $app): DataCleanup => new DataCleanup(
             $app->make(SettingsStore::class),

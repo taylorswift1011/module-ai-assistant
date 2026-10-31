@@ -24,6 +24,16 @@ The module is `AGPL-3.0-only`. Your administrator supplies and funds the OpenRou
 
 The global administrator's configuration is the default for every company. A company owner can open **Company Settings → AI Assistant**, choose **Use a company-specific AI configuration**, and provide a different provider configuration or models for that company.
 
+## Using a Claude subscription (Claude Code driver)
+
+This fork adds a **Claude Code (subscription login)** provider. Instead of an API key, it runs the official `claude` CLI headlessly (`claude -p`) on the server, so inference uses the Claude subscription the CLI is logged in with.
+
+1. Install Claude Code on the server and run `claude login` **as the user the web server runs as** (for example `www-data`, with a writable `HOME`).
+2. Optionally set `CLAUDE_CLI_PATH` if `claude` is not on the web server's `PATH`.
+3. In **Administration → Settings → AI Assistant**, choose the provider, use model aliases such as `sonnet`, `haiku` or `opus`, and click **Test connection**.
+
+The CLI runs with all of its own tools disabled; InvoiceShelf's read-only tools are offered to it as a JSON protocol in the prompt. The provider can only be selected globally by a super administrator, because it spends the server's login. Use of a subscription is subject to Anthropic's terms; this is intended for your own installation.
+
 ## Privacy and access
 
 When someone uses a capability, their prompt and the business data that the selected model requests through the module's read-only tools are sent to OpenRouter and the chosen model provider. The assistant is scoped to the active company and respects the user's InvoiceShelf permissions; it cannot write invoices, expenses, customers, payments, or other business records.

@@ -31,6 +31,7 @@ const aiOn = computed(() => form.ai_enabled === 'YES')
 const selectedDriver = computed(() => drivers.value.find((driver) => driver.value === form.ai_driver))
 const suggestedModels = computed(() => selectedDriver.value?.suggested_models ?? [])
 const fields = computed(() => selectedDriver.value?.config_fields ?? [])
+const needsKey = computed(() => selectedDriver.value?.requires_api_key ?? true)
 const hasMaskedKey = computed(() => /[•*]/.test(form.ai_api_key))
 const visibleConfig = computed(() => props.scope === 'admin' || isCustom.value)
 
@@ -59,6 +60,14 @@ async function load(): Promise<void> {
   }
 }
 
+function onDriverChange(): void {
+  const models = selectedDriver.value?.suggested_models ?? []
+  if (models.length === 0) return
+  const known = (value: string): boolean => models.some((model) => model.value === value)
+  if (!known(form.ai_chat_model)) form.ai_chat_model = models[0].value
+  if (!known(form.ai_text_generation_model)) form.ai_text_generation_model = (models[1] ?? models[0]).value
+}
+
 function payload(): CompanyAiConfig {
   // The backend recognizes the masked placeholder and retains the stored secret.
   return { ...form }
@@ -67,7 +76,7 @@ function payload(): CompanyAiConfig {
 function validate(): string | null {
   if (!aiOn.value) return null
   if (!form.ai_driver) return 'Choose an AI provider.'
-  if (!form.ai_api_key && !hasMaskedKey.value) return 'Enter an API key.'
+  if (needsKey.value && !form.ai_api_key && !hasMaskedKey.value) return 'Enter an API key.'
   if (form.ai_base_url) {
     try { new URL(form.ai_base_url) } catch { return 'Enter a valid base URL.' }
   }
@@ -153,10 +162,11 @@ function updateExtraField(key: string, event: Event): void {
 
           <div v-if="aiOn" class="space-y-5">
             <label class="block text-sm font-medium text-heading">Provider
-              <select v-model="form.ai_driver" class="mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2 text-body"><option v-for="driver in drivers" :key="driver.value" :value="driver.value">{{ driver.label }}</option></select>
+              <select v-model="form.ai_driver" class="mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2 text-body" @change="onDriverChange"><option v-for="driver in drivers" :key="driver.value" :value="driver.value">{{ driver.label }}</option></select>
             </label>
-            <p v-if="selectedDriver?.website" class="-mt-3 text-xs text-muted">Get an API key from <a class="text-primary-500 underline" :href="selectedDriver.website" target="_blank" rel="noopener noreferrer">{{ selectedDriver.label }}</a>.</p>
-            <label class="block text-sm font-medium text-heading">API key
+            <p v-if="!needsKey" class="-mt-3 text-xs text-muted">Uses the Claude subscription that the server's <code>claude</code> CLI is logged in with (run <code>claude login</code> as the web server user). No API key is stored.</p>
+            <p v-else-if="selectedDriver?.website" class="-mt-3 text-xs text-muted">Get an API key from <a class="text-primary-500 underline" :href="selectedDriver.website" target="_blank" rel="noopener noreferrer">{{ selectedDriver.label }}</a>.</p>
+            <label v-if="needsKey" class="block text-sm font-medium text-heading">API key
               <span class="mt-1 flex gap-2"><input v-model="form.ai_api_key" :type="showKey ? 'text' : 'password'" autocomplete="new-password" class="min-w-0 flex-1 rounded-md border border-line-default bg-surface px-3 py-2 text-body" :placeholder="hasMaskedKey ? 'Stored securely — enter a new key to replace it' : ''"><button type="button" class="rounded border border-line-default px-3 text-xs text-body hover:bg-hover" @click="showKey = !showKey">{{ showKey ? 'Hide' : 'Show' }}</button></span>
               <span class="mt-1 block text-xs font-normal text-muted">Keys are stored securely. Leave the masked value unchanged to keep the current key.</span>
             </label>

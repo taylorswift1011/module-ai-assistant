@@ -78,7 +78,11 @@ class AiConfigurationService
         }
 
         $company = $this->getCompanyConfig($companyId);
-        $resolved = ($company['use_custom_ai_config'] ?? 'NO') === 'YES' ? $company : $global;
+        $useCompany = ($company['use_custom_ai_config'] ?? 'NO') === 'YES';
+        $resolved = $useCompany ? $company : $global;
+        if ($useCompany && $this->driverIsGlobalOnly((string) ($resolved['ai_driver'] ?? ''))) {
+            return null;
+        }
         if (($resolved['ai_enabled'] ?? 'NO') !== 'YES') {
             return null;
         }
@@ -92,13 +96,27 @@ class AiConfigurationService
     public function makeDriver(int $companyId): ?AiDriver
     {
         $config = $this->resolveForCompany($companyId);
-        if ($config === null || empty($config['ai_api_key']) || empty($config['ai_driver'])) {
+        if ($config === null || empty($config['ai_driver'])) {
+            return null;
+        }
+        if (empty($config['ai_api_key']) && $this->driverRequiresApiKey((string) $config['ai_driver'])) {
             return null;
         }
 
         return AiDriverFactory::make((string) $config['ai_driver'], (string) $config['ai_api_key'], [
             'base_url' => $config['ai_base_url'] ?? null,
         ]);
+    }
+
+    public function driverRequiresApiKey(string $driver): bool
+    {
+        return (bool) (Registry::driverMeta('ai', $driver)['requires_api_key'] ?? true);
+    }
+
+    /** Global-only drivers spend a server-level resource, so only a super admin may choose them. */
+    public function driverIsGlobalOnly(string $driver): bool
+    {
+        return (bool) (Registry::driverMeta('ai', $driver)['global_only'] ?? false);
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -108,6 +126,8 @@ class AiConfigurationService
             'value' => $name,
             'label' => $meta['label'],
             'website' => $meta['website'] ?? '',
+            'requires_api_key' => (bool) ($meta['requires_api_key'] ?? true),
+            'global_only' => (bool) ($meta['global_only'] ?? false),
             'default_base_url' => $meta['default_base_url'] ?? '',
             'supported_roles' => $meta['supported_roles'],
             'suggested_models' => $meta['suggested_models'],
