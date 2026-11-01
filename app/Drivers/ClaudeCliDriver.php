@@ -129,7 +129,13 @@ class ClaudeCliDriver extends AiDriver
         }
 
         // Run from a neutral directory so no project CLAUDE.md or settings are picked up.
-        $process = new Process($command, sys_get_temp_dir(), null, $prompt, self::TIMEOUT_SECONDS);
+        $process = new Process(
+            $command,
+            sys_get_temp_dir(),
+            ($home = $this->cliHome()) !== null ? ['HOME' => $home] : null,
+            $prompt,
+            self::TIMEOUT_SECONDS,
+        );
 
         try {
             $process->run();
@@ -172,14 +178,45 @@ class ClaudeCliDriver extends AiDriver
     }
 
     /**
-     * The binary is host configuration (`CLAUDE_CLI_PATH`); the callers never
-     * pass `cli_path` from user input, so an admin cannot choose what runs.
+     * The binary and its HOME are host configuration (`CLAUDE_CLI_PATH`,
+     * `CLAUDE_CLI_HOME`), or the `storage/claude-home` directory the
+     * installer is pointed at. Callers never pass `cli_path` from user input,
+     * so an admin cannot choose what runs.
      */
     protected function binary(): string
     {
         $path = $this->config['cli_path'] ?? getenv('CLAUDE_CLI_PATH');
+        if (is_string($path) && $path !== '') {
+            return $path;
+        }
 
-        return is_string($path) && $path !== '' ? $path : 'claude';
+        $home = $this->cliHome();
+        if ($home !== null && is_file($home.'/.local/bin/claude')) {
+            return $home.'/.local/bin/claude';
+        }
+
+        return 'claude';
+    }
+
+    /** The directory that holds the CLI login (`~/.claude`), or null to use the process's own HOME. */
+    protected function cliHome(): ?string
+    {
+        $home = $this->config['cli_home'] ?? getenv('CLAUDE_CLI_HOME');
+        if (is_string($home) && $home !== '') {
+            return rtrim($home, '/');
+        }
+
+        if (function_exists('storage_path')) {
+            try {
+                $default = storage_path('claude-home');
+            } catch (Throwable) {
+                return null;
+            }
+
+            return is_dir($default) ? $default : null;
+        }
+
+        return null;
     }
 
     /**

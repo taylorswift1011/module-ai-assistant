@@ -28,8 +28,8 @@ The global administrator's configuration is the default for every company. A com
 
 This fork adds a **Claude Code (subscription login)** provider. Instead of an API key, it runs the official `claude` CLI headlessly (`claude -p`) on the server, so inference uses the Claude subscription the CLI is logged in with.
 
-1. Install Claude Code on the server and run `claude login` **as the user the web server runs as** (for example `www-data`, with a writable `HOME`).
-2. Optionally set `CLAUDE_CLI_PATH` if `claude` is not on the web server's `PATH`.
+1. Install Claude Code on the server and run `claude login` **as the user the web server runs as**, with `HOME` set to a non-public directory such as `storage/claude-home`.
+2. The driver looks for the CLI and its login in `storage/claude-home` (install with `HOME=<app>/storage/claude-home`), or in the directory named by `CLAUDE_CLI_HOME`. `CLAUDE_CLI_PATH` overrides the binary.
 3. In **Administration → Settings → AI Assistant**, choose the provider, use model aliases such as `sonnet`, `haiku` or `opus`, and click **Test connection**.
 
 The CLI runs with all of its own tools disabled; InvoiceShelf's read-only tools are offered to it as a JSON protocol in the prompt. The provider can only be selected globally by a super administrator, because it spends the server's login. Use of a subscription is subject to Anthropic's terms; this is intended for your own installation.
