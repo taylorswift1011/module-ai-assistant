@@ -1,6 +1,6 @@
-const { Fragment: e, Teleport: t, computed: n, createBlock: r, createCommentVNode: i, createElementBlock: a, createElementVNode: o, createTextVNode: s, createVNode: c, defineComponent: l, h: u, mergeModels: d, nextTick: f, normalizeClass: p, onMounted: m, openBlock: h, reactive: g, ref: _, renderList: v, resolveComponent: y, toDisplayString: b, unref: x, useModel: S, vModelCheckbox: C, vModelDynamic: ee, vModelSelect: te, vModelText: w, watch: ne, withCtx: re, withDirectives: T, withKeys: ie, withModifiers: ae } = window.__invoiceshelf_vue;
+const { Fragment: e, Teleport: t, computed: n, createBlock: r, createCommentVNode: i, createElementBlock: a, createElementVNode: o, createTextVNode: s, createVNode: c, defineComponent: l, h: u, mergeModels: d, nextTick: f, normalizeClass: p, onMounted: m, openBlock: h, reactive: g, ref: _, renderList: v, resolveComponent: y, toDisplayString: b, unref: x, useModel: S, vModelCheckbox: C, vModelDynamic: ee, vModelSelect: te, vModelText: ne, watch: re, withCtx: ie, withDirectives: w, withKeys: ae, withModifiers: oe } = window.__invoiceshelf_vue;
 //#region resources/js/api.ts
-var E = {
+var T = {
 	adminCapabilities: "/api/v1/ai/admin-capabilities",
 	capabilities: "/api/v1/ai/capabilities",
 	drivers: "/api/v1/ai/drivers",
@@ -17,7 +17,7 @@ var E = {
 };
 //#endregion
 //#region node_modules/.pnpm/dompurify@3.4.13/node_modules/dompurify/dist/purify.es.mjs
-function oe(e, t) {
+function E(e, t) {
 	(t == null || t > e.length) && (t = e.length);
 	for (var n = 0, r = Array(t); n < t; n++) r[n] = e[n];
 	return r;
@@ -51,9 +51,9 @@ function D(e, t) {
 }
 function ue(e, t) {
 	if (e) {
-		if (typeof e == "string") return oe(e, t);
+		if (typeof e == "string") return E(e, t);
 		var n = {}.toString.call(e).slice(8, -1);
-		return n === "Object" && e.constructor && (n = e.constructor.name), n === "Map" || n === "Set" ? Array.from(e) : n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n) ? oe(e, t) : void 0;
+		return n === "Object" && e.constructor && (n = e.constructor.name), n === "Map" || n === "Set" ? Array.from(e) : n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n) ? E(e, t) : void 0;
 	}
 }
 var O = Object.entries, de = Object.setPrototypeOf, fe = Object.isFrozen, pe = Object.getPrototypeOf, me = Object.getOwnPropertyDescriptor, k = Object.freeze, A = Object.seal, j = Object.create, he = typeof Reflect < "u" && Reflect, ge = he.apply, _e = he.construct;
@@ -279,26 +279,26 @@ function pt() {
 		let e = n.createElement("template");
 		e.content && e.content.ownerDocument && (n = e.content.ownerDocument);
 	}
-	let S, C = "", ee, te = !1, w = 0, ne = function() {
-		if (w > 0) throw Ne("A configured TRUSTED_TYPES_POLICY callback (createHTML or createScriptURL) must not call DOMPurify.sanitize, as that causes infinite recursion. Do not pass a policy whose callbacks wrap DOMPurify as TRUSTED_TYPES_POLICY; see the \"DOMPurify and Trusted Types\" section of the README.");
-	}, re = function(e) {
-		ne(), w++;
+	let S, C = "", ee, te = !1, ne = 0, re = function() {
+		if (ne > 0) throw Ne("A configured TRUSTED_TYPES_POLICY callback (createHTML or createScriptURL) must not call DOMPurify.sanitize, as that causes infinite recursion. Do not pass a policy whose callbacks wrap DOMPurify as TRUSTED_TYPES_POLICY; see the \"DOMPurify and Trusted Types\" section of the README.");
+	}, ie = function(e) {
+		re(), ne++;
 		try {
 			return S.createHTML(e);
 		} finally {
-			w--;
+			ne--;
 		}
-	}, T = function(e) {
-		ne(), w++;
+	}, w = function(e) {
+		re(), ne++;
 		try {
 			return S.createScriptURL(e);
 		} finally {
-			w--;
+			ne--;
 		}
-	}, ie = function() {
+	}, ae = function() {
 		return te ||= (ee = ut(u, i), !0), ee;
-	}, ae = n, E = ae.implementation, oe = ae.createNodeIterator, se = ae.createDocumentFragment, ce = ae.getElementsByTagName, le = r.importNode, D = dt();
-	t.isSupported = typeof O == "function" && typeof g == "function" && E && E.createHTMLDocument !== void 0;
+	}, oe = n, T = oe.implementation, E = oe.createNodeIterator, se = oe.createDocumentFragment, ce = oe.getElementsByTagName, le = r.importNode, D = dt();
+	t.isSupported = typeof O == "function" && typeof g == "function" && T && T.createHTMLDocument !== void 0;
 	let ue = Ye, de = Xe, fe = Ze, pe = Qe, me = $e, he = tt, ge = nt, _e = it, Ae = et, M = null, je = L({}, [
 		...Re,
 		...ze,
@@ -403,11 +403,11 @@ function pt() {
 			let t = S;
 			S = e.TRUSTED_TYPES_POLICY;
 			try {
-				C = re("");
+				C = ie("");
 			} catch (e) {
 				throw S = t, e;
 			}
-		} else e.TRUSTED_TYPES_POLICY === null ? (S = void 0, C = "") : (S === void 0 && (S = ie()), S && typeof C == "string" && (C = re("")));
+		} else e.TRUSTED_TYPES_POLICY === null ? (S = void 0, C = "") : (S === void 0 && (S = ae()), S && typeof C == "string" && (C = ie("")));
 		k && k(e), Jt = e;
 	}, Qt = L({}, [
 		...ze,
@@ -516,12 +516,12 @@ function pt() {
 			r = t && t[0];
 		}
 		Kt === "application/xhtml+xml" && Rt === K && (e = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head></head><body>" + e + "</body></html>");
-		let i = S ? re(e) : e;
+		let i = S ? ie(e) : e;
 		if (Rt === K) try {
 			t = new l().parseFromString(i, Kt);
 		} catch {}
 		if (!t || !t.documentElement) {
-			t = E.createDocument(Rt, "template", null);
+			t = T.createDocument(Rt, "template", null);
 			try {
 				t.documentElement.innerHTML = zt ? C : i;
 			} catch {}
@@ -530,12 +530,12 @@ function pt() {
 		return e && r && a.insertBefore(n.createTextNode(r), a.childNodes[0] || null), Rt === K ? ce.call(t, yt ? "html" : "body")[0] : yt ? t.documentElement : a;
 	}, fn = function(e) {
 		let t = x ? x(e) : e.ownerDocument;
-		return oe.call(t || e, e, c.SHOW_ELEMENT | c.SHOW_COMMENT | c.SHOW_TEXT | c.SHOW_PROCESSING_INSTRUCTION | c.SHOW_CDATA_SECTION, null);
+		return E.call(t || e, e, c.SHOW_ELEMENT | c.SHOW_COMMENT | c.SHOW_TEXT | c.SHOW_PROCESSING_INSTRUCTION | c.SHOW_CDATA_SECTION, null);
 	}, pn = function(e) {
 		return e = De(e, ue, " "), e = De(e, de, " "), e = De(e, fe, " "), e;
 	}, mn = function(e) {
 		e.normalize();
-		let t = x ? x(e) : e.ownerDocument, n = oe.call(t || e, e, c.SHOW_TEXT | c.SHOW_COMMENT | c.SHOW_CDATA_SECTION | c.SHOW_PROCESSING_INSTRUCTION, null), r = n.nextNode();
+		let t = x ? x(e) : e.ownerDocument, n = E.call(t || e, e, c.SHOW_TEXT | c.SHOW_COMMENT | c.SHOW_CDATA_SECTION | c.SHOW_PROCESSING_INSTRUCTION, null), r = n.nextNode();
 		for (; r;) r.data = pn(r.data), r = n.nextNode();
 		let i = e.querySelectorAll?.call(e, "template");
 		i && ve(i, (e) => {
@@ -622,8 +622,8 @@ function pt() {
 		return !Cn[we(e)] && F(_e, e);
 	}, Tn = function(e, t, n, r) {
 		if (S && typeof u == "object" && typeof u.getAttributeType == "function" && !n) switch (u.getAttributeType(e, t)) {
-			case "TrustedHTML": return re(r);
-			case "TrustedScriptURL": return T(r);
+			case "TrustedHTML": return ie(r);
+			case "TrustedScriptURL": return w(r);
 		}
 		return r;
 	}, En = function(e, n, r, i) {
@@ -737,7 +737,7 @@ function pt() {
 			}
 		} else if (_n(e)) i = dn("<!---->"), a = i.ownerDocument.importNode(e, !0), a.nodeType === B.element && a.nodeName === "BODY" || a.nodeName === "HTML" ? i = a : i.appendChild(a), On(a);
 		else {
-			if (!W && !V && !yt && e.indexOf("<") === -1) return S && wt ? re(e) : e;
+			if (!W && !V && !yt && e.indexOf("<") === -1) return S && wt ? ie(e) : e;
 			if (i = dn(e), !i) return W ? null : wt ? C : "";
 		}
 		i && St && an(i.firstChild);
@@ -759,7 +759,7 @@ function pt() {
 			return (N.shadowroot || N.shadowrootmode) && (s = le.call(r, s, !0)), s;
 		}
 		let u = yt ? i.outerHTML : i.innerHTML;
-		return yt && M["!doctype"] && i.ownerDocument && i.ownerDocument.doctype && i.ownerDocument.doctype.name && F(rt, i.ownerDocument.doctype.name) && (u = "<!DOCTYPE " + i.ownerDocument.doctype.name + ">\n" + u), V && (u = pn(u)), S && wt ? re(u) : u;
+		return yt && M["!doctype"] && i.ownerDocument && i.ownerDocument.doctype && i.ownerDocument.doctype.name && F(rt, i.ownerDocument.doctype.name) && (u = "<!DOCTYPE " + i.ownerDocument.doctype.name + ">\n" + u), V && (u = pn(u)), S && wt ? ie(u) : u;
 	}, t.setConfig = function() {
 		let e = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
 		Zt(e), U = !0, bt = M, xt = N;
@@ -2265,7 +2265,7 @@ function Hn(e, t) {
 	async function p() {
 		o.value = !0;
 		try {
-			let { data: t } = await e.get(E.conversations);
+			let { data: t } = await e.get(T.conversations);
 			a.value = t.conversations;
 		} catch {} finally {
 			o.value = !1;
@@ -2274,7 +2274,7 @@ function Hn(e, t) {
 	async function m(n) {
 		s.value = !0, l.value = null;
 		try {
-			let { data: t } = await e.get(E.conversation(n));
+			let { data: t } = await e.get(T.conversation(n));
 			r.value = t.conversation.id, i.value = t.messages;
 		} catch (e) {
 			let n = Un(e, "Unable to load this conversation.");
@@ -2295,7 +2295,7 @@ function Hn(e, t) {
 		};
 		i.value.push(a);
 		try {
-			let { data: t } = await e.post(E.chat, {
+			let { data: t } = await e.post(T.chat, {
 				conversation_id: r.value,
 				message: n
 			});
@@ -2312,7 +2312,7 @@ function Hn(e, t) {
 	async function g(n, r) {
 		let i = r.trim();
 		if (i) try {
-			await e.patch(E.conversation(n), { title: i });
+			await e.patch(T.conversation(n), { title: i });
 			let t = a.value.find((e) => e.id === n);
 			t && (t.title = i);
 		} catch (e) {
@@ -2321,7 +2321,7 @@ function Hn(e, t) {
 	}
 	async function v(n) {
 		try {
-			await e.delete(E.conversation(n)), a.value = a.value.filter((e) => e.id !== n), r.value === n && f();
+			await e.delete(T.conversation(n)), a.value = a.value.filter((e) => e.id !== n), r.value === n && f();
 		} catch (e) {
 			t("error", Un(e, "Unable to delete this conversation."));
 		}
@@ -2403,24 +2403,24 @@ var Wn = {
 	emits: ["update:open"],
 	setup(n) {
 		let s = n, l = S(n, "open"), u = Hn(s.client, s.notify), d = _(""), m = _(null), g = _(!1), C = _(null), ee = _("");
-		ne(l, (e) => {
+		re(l, (e) => {
 			e && s.enabled && u.refreshConversations();
-		}), ne(() => s.enabled, (e) => {
+		}), re(() => s.enabled, (e) => {
 			e || (l.value = !1, u.reset());
-		}), ne(() => u.messages.value.length, async () => {
+		}), re(() => u.messages.value.length, async () => {
 			await f(), m.value && (m.value.scrollTop = m.value.scrollHeight);
 		});
 		function te() {
 			l.value = !1, g.value = !1;
 		}
-		async function re(e) {
+		async function ie(e) {
 			await u.loadConversation(e.id), g.value = !1;
 		}
-		async function E() {
+		async function T() {
 			let e = d.value;
 			d.value = "", await u.sendMessage(e);
 		}
-		function oe(e, t) {
+		function E(e, t) {
 			t.stopPropagation(), C.value = e.id, ee.value = e.title ?? "";
 		}
 		async function se() {
@@ -2433,7 +2433,7 @@ var Wn = {
 			u.newConversation(), g.value = !1;
 		}
 		function D(e) {
-			e.key === "Enter" && !e.shiftKey && (e.preventDefault(), E());
+			e.key === "Enter" && !e.shiftKey && (e.preventDefault(), T());
 		}
 		function ue(e) {
 			return mt.sanitize($.parse(e ?? "", { async: !1 }));
@@ -2453,14 +2453,14 @@ var Wn = {
 			}, " + New conversation ")]), o("div", Kn, [x(u).isLoadingConversations.value && !x(u).conversations.value.length ? (h(), a("p", qn, "Loading history…")) : x(u).conversations.value.length ? (h(), a("ul", Yn, [(h(!0), a(e, null, v(x(u).conversations.value, (e) => (h(), a("li", { key: e.id }, [C.value === e.id ? (h(), a("form", {
 				key: 0,
 				class: "flex gap-1 p-1",
-				onSubmit: ae(se, ["prevent"])
-			}, [T(o("input", {
+				onSubmit: oe(se, ["prevent"])
+			}, [w(o("input", {
 				"onUpdate:modelValue": f[0] ||= (e) => ee.value = e,
 				class: "min-w-0 flex-1 rounded border border-line-default bg-surface px-2 py-1 text-xs text-body",
 				"aria-label": "Conversation title",
 				autofocus: "",
-				onKeydown: f[1] ||= ie((e) => C.value = null, ["esc"])
-			}, null, 544), [[w, ee.value]]), f[4] ||= o("button", {
+				onKeydown: f[1] ||= ae((e) => C.value = null, ["esc"])
+			}, null, 544), [[ne, ee.value]]), f[4] ||= o("button", {
 				type: "submit",
 				class: "rounded px-1 text-xs text-primary-500 hover:bg-hover",
 				"aria-label": "Save conversation title"
@@ -2470,12 +2470,12 @@ var Wn = {
 			}, [o("button", {
 				type: "button",
 				class: "min-w-0 flex-1 truncate px-2 py-2 text-left",
-				onClick: (t) => re(e)
+				onClick: (t) => ie(e)
 			}, b(e.title || "Untitled conversation"), 9, Xn), o("span", Zn, [o("button", {
 				type: "button",
 				class: "px-1 text-muted hover:text-heading",
 				"aria-label": "Rename conversation",
-				onClick: (t) => oe(e, t)
+				onClick: (t) => E(e, t)
 			}, "✎", 8, Qn), o("button", {
 				type: "button",
 				class: "px-1 text-muted hover:text-alert-error-text",
@@ -2523,7 +2523,7 @@ var Wn = {
 					key: e.id,
 					type: "button",
 					class: "block w-full truncate rounded px-2 py-2 text-left text-sm text-body hover:bg-hover",
-					onClick: (t) => re(e)
+					onClick: (t) => ie(e)
 				}, b(e.title || "Untitled conversation"), 9, or))), 128)), x(u).conversations.value.length ? i("", !0) : (h(), a("p", sr, "No conversations yet."))])])) : i("", !0),
 				o("main", {
 					ref_key: "messagesEl",
@@ -2548,15 +2548,15 @@ var Wn = {
 				], 512),
 				o("form", {
 					class: "flex items-end gap-2 border-t border-line-default p-3",
-					onSubmit: ae(E, ["prevent"])
-				}, [T(o("textarea", {
+					onSubmit: oe(T, ["prevent"])
+				}, [w(o("textarea", {
 					"onUpdate:modelValue": f[3] ||= (e) => d.value = e,
 					rows: "2",
 					class: "min-h-11 flex-1 resize-none rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-none focus:ring-1 focus:ring-primary-500",
 					placeholder: "Ask about your business…",
 					disabled: !n.enabled || x(u).isSending.value,
 					onKeydown: D
-				}, null, 40, mr), [[w, d.value]]), o("button", {
+				}, null, 40, mr), [[ne, d.value]]), o("button", {
 					type: "submit",
 					class: "rounded-md bg-btn-primary px-3 py-2 text-sm font-medium text-white hover:bg-btn-primary-hover disabled:cursor-not-allowed disabled:opacity-50",
 					disabled: !n.enabled || x(u).isSending.value || !d.value.trim()
@@ -2606,14 +2606,14 @@ var Wn = {
 	},
 	setup(l) {
 		let u = l, d = _(!1), f = _(""), p = _(!1), m = _(""), g = _(!1), v = _(""), x = n(() => m.value.trim().length > 0);
-		ne(d, (e) => {
+		re(d, (e) => {
 			e || (f.value = "", p.value = !1, m.value = "", v.value = "");
 		});
 		async function S() {
 			if (!(!f.value.trim() || g.value)) {
 				g.value = !0, v.value = "", m.value = "";
 				try {
-					let { data: e } = await u.client.post(E.generate, {
+					let { data: e } = await u.client.post(T.generate, {
 						prompt: f.value.trim(),
 						context: p.value ? u.context.getHtml() : void 0
 					});
@@ -2646,7 +2646,7 @@ var Wn = {
 				key: 0,
 				class: "fixed inset-0 z-50 grid place-items-center bg-black/30 p-4",
 				role: "presentation",
-				onMousedown: u[5] ||= ae((e) => d.value = !1, ["self"])
+				onMousedown: u[5] ||= oe((e) => d.value = !1, ["self"])
 			}, [o("section", yr, [
 				o("header", br, [o("div", xr, [c(_, {
 					name: "SparklesIcon",
@@ -2666,13 +2666,13 @@ var Wn = {
 				})], 8, Sr)]),
 				o("form", {
 					class: "space-y-4 p-5",
-					onSubmit: ae(S, ["prevent"])
+					onSubmit: oe(S, ["prevent"])
 				}, [
 					u[11] ||= o("label", {
 						class: "block text-sm font-medium text-heading",
 						for: "ai-prompt"
 					}, "What would you like to write?", -1),
-					T(o("textarea", {
+					w(o("textarea", {
 						id: "ai-prompt",
 						"onUpdate:modelValue": u[2] ||= (e) => f.value = e,
 						rows: "3",
@@ -2680,9 +2680,9 @@ var Wn = {
 						placeholder: "For example: Write a polite payment reminder",
 						disabled: g.value,
 						autofocus: ""
-					}, null, 8, Cr), [[w, f.value]]),
+					}, null, 8, Cr), [[ne, f.value]]),
 					l.context.getHtml() ? (h(), a("label", wr, [
-						T(o("input", {
+						w(o("input", {
 							"onUpdate:modelValue": u[3] ||= (e) => p.value = e,
 							type: "checkbox",
 							class: "mt-1"
@@ -2804,43 +2804,43 @@ var Wn = {
 		}, d = g({
 			...u,
 			use_custom_ai_config: "NO"
-		}), p = _([]), x = _(!0), S = _(!1), C = _(!1), ie = _(!1), oe = _(""), se = n(() => l.scope === "admin" ? E.globalConfig : E.companyConfig), ce = n(() => l.scope === "admin" ? E.globalModels : E.companyModels), le = n(() => l.scope === "admin" ? E.globalTest : E.companyTest), D = n(() => d.use_custom_ai_config === "YES"), ue = n(() => d.ai_enabled === "YES"), O = n(() => p.value.find((e) => e.value === d.ai_driver)), de = n(() => O.value?.suggested_models ?? []), fe = n(() => O.value?.config_fields ?? []), pe = n(() => O.value?.requires_api_key ?? !0), me = n(() => O.value?.accepts_api_key === !0), k = n(() => O.value?.fetches_models === !0), A = _([]), j = _(!1), he = _(""), ge = n(() => /[•*]/.test(d.ai_api_key)), _e = n(() => l.scope === "admin" || D.value);
-		ne(() => d.ai_driver, (e, t) => {
+		}), p = _([]), x = _(!0), S = _(!1), C = _(!1), ae = _(!1), E = _(""), se = n(() => l.scope === "admin" ? T.globalConfig : T.companyConfig), ce = n(() => l.scope === "admin" ? T.globalModels : T.companyModels), le = n(() => l.scope === "admin" ? T.globalTest : T.companyTest), D = n(() => d.use_custom_ai_config === "YES"), ue = n(() => d.ai_enabled === "YES"), O = n(() => p.value.find((e) => e.value === d.ai_driver)), de = n(() => O.value?.suggested_models ?? []), fe = n(() => O.value?.config_fields ?? []), pe = n(() => O.value?.requires_api_key ?? !0), me = n(() => O.value?.accepts_api_key === !0), k = n(() => O.value?.fetches_models === !0), A = _([]), j = _(!1), he = _(""), ge = n(() => fe.value.some((e) => e.key === "base_url")), _e = n(() => /[•*]/.test(d.ai_api_key)), ve = n(() => l.scope === "admin" || D.value);
+		re(() => d.ai_driver, (e, t) => {
 			let n = p.value.find((t) => t.value === e), r = p.value.find((e) => e.value === t);
 			(!d.ai_base_url || d.ai_base_url === r?.default_base_url) && (d.ai_base_url = n?.default_base_url ?? "");
 		}), m(() => {
-			ve();
+			ye();
 		});
-		async function ve() {
-			x.value = !0, oe.value = "";
+		async function ye() {
+			x.value = !0, E.value = "";
 			try {
-				let [{ data: e }, { data: t }] = await Promise.all([l.client.get(E.drivers), l.client.get(se.value)]);
-				p.value = e.ai_drivers, Object.assign(d, u, t), d.ai_enabled === "YES" && O.value?.fetches_models && be(!1);
+				let [{ data: e }, { data: t }] = await Promise.all([l.client.get(T.drivers), l.client.get(se.value)]);
+				p.value = e.ai_drivers, Object.assign(d, u, t), d.ai_enabled === "YES" && O.value?.fetches_models && xe(!1);
 			} catch (e) {
-				oe.value = Un(e, "Unable to load AI configuration."), l.notify("error", oe.value);
+				E.value = Un(e, "Unable to load AI configuration."), l.notify("error", E.value);
 			} finally {
 				x.value = !1;
 			}
 		}
-		async function ye() {
+		async function be() {
 			A.value = [], he.value = "";
 			let e = O.value?.suggested_models ?? [];
 			if (O.value?.fetches_models) {
-				d.ai_chat_model = "", d.ai_text_generation_model = "", await f(), be(!0);
+				d.ai_chat_model = "", d.ai_text_generation_model = "", await f(), xe(!0);
 				return;
 			}
 			if (e.length === 0) return;
 			let t = (t) => e.some((e) => e.value === t);
 			t(d.ai_chat_model) || (d.ai_chat_model = e[0].value), t(d.ai_text_generation_model) || (d.ai_text_generation_model = (e[1] ?? e[0]).value);
 		}
-		async function be(e) {
+		async function xe(e) {
 			if (!(j.value || !d.ai_driver)) {
 				j.value = !0, he.value = "";
 				try {
 					let { data: t } = await l.client.post(ce.value, {
 						ai_driver: d.ai_driver,
-						ai_api_key: ge.value ? void 0 : d.ai_api_key,
-						ai_base_url: d.ai_base_url
+						ai_api_key: _e.value ? void 0 : d.ai_api_key,
+						ai_base_url: ge.value ? d.ai_base_url : ""
 					});
 					A.value = t.models ?? [];
 					let n = A.value[0]?.value ?? "", r = (e) => A.value.some((t) => t.value === e);
@@ -2852,43 +2852,46 @@ var Wn = {
 				}
 			}
 		}
-		function xe(e) {
+		function Se(e) {
 			let t = A.value;
 			return e && !t.some((t) => t.value === e) ? [{
 				value: e,
 				label: `${e} (not offered by the server)`
 			}, ...t] : t;
 		}
-		function Se() {
-			return { ...d };
-		}
 		function Ce() {
+			return {
+				...d,
+				ai_base_url: ge.value ? d.ai_base_url : ""
+			};
+		}
+		function we() {
 			if (!ue.value) return null;
 			if (!d.ai_driver) return "Choose an AI provider.";
-			if (pe.value && !d.ai_api_key && !ge.value) return "Enter an API key.";
-			if (d.ai_base_url) try {
+			if (pe.value && !d.ai_api_key && !_e.value) return "Enter an API key.";
+			if (ge.value && d.ai_base_url) try {
 				new URL(d.ai_base_url);
 			} catch {
 				return "Enter a valid base URL.";
 			}
 			return d.ai_chat_enabled === "YES" && !d.ai_chat_model.trim() ? "Choose a chat model." : d.ai_text_generation_enabled === "YES" && !d.ai_text_generation_model.trim() ? "Choose a text generation model." : null;
 		}
-		async function we() {
-			let e = Ce();
+		async function Te() {
+			let e = we();
 			if (e) {
 				l.notify("error", e);
 				return;
 			}
 			S.value = !0;
 			try {
-				await l.client.post(se.value, Se()), l.notify("success", "AI settings saved.");
+				await l.client.post(se.value, Ce()), l.notify("success", "AI settings saved.");
 			} catch (e) {
 				l.notify("error", Un(e, "Unable to save AI settings."));
 			} finally {
 				S.value = !1;
 			}
 		}
-		async function Te(e) {
+		async function Ee(e) {
 			let t = e.target.checked;
 			if (d.use_custom_ai_config = t ? "YES" : "NO", !t) {
 				S.value = !0;
@@ -2901,14 +2904,14 @@ var Wn = {
 				}
 			}
 		}
-		async function Ee() {
+		async function De() {
 			if (ue.value) {
 				C.value = !0;
 				try {
 					let { data: e } = await l.client.post(le.value, {
 						ai_driver: d.ai_driver,
-						ai_api_key: ge.value ? void 0 : d.ai_api_key,
-						ai_base_url: d.ai_base_url
+						ai_api_key: _e.value ? void 0 : d.ai_api_key,
+						ai_base_url: ge.value ? d.ai_base_url : ""
 					});
 					e.success ? l.notify("success", e.message ?? "Connection successful.") : l.notify("error", e.message ?? e.error ?? "The connection test failed.");
 				} catch (e) {
@@ -2918,40 +2921,40 @@ var Wn = {
 				}
 			}
 		}
-		function De(e, t) {
+		function Oe(e, t) {
 			d[e] = t.target.checked ? "YES" : "NO";
 		}
-		function Oe(e, t) {
+		function ke(e, t) {
 			d[`ai_${e}`] = t.target.value;
 		}
 		return (n, l) => {
 			let u = y("BasePageHeader"), f = y("BaseCard"), m = y("BasePage");
 			return h(), r(m, null, {
-				default: re(() => [c(u, { title: t.scope === "admin" ? "AI Assistant" : "AI Assistant configuration" }, null, 8, ["title"]), c(f, { class: "max-w-3xl" }, {
-					default: re(() => [x.value ? (h(), a("div", Fr, "Loading AI configuration…")) : oe.value ? (h(), a("div", Ir, [o("p", Lr, b(oe.value), 1), o("button", {
+				default: ie(() => [c(u, { title: t.scope === "admin" ? "AI Assistant" : "AI Assistant configuration" }, null, 8, ["title"]), c(f, { class: "max-w-3xl" }, {
+					default: ie(() => [x.value ? (h(), a("div", Fr, "Loading AI configuration…")) : E.value ? (h(), a("div", Ir, [o("p", Lr, b(E.value), 1), o("button", {
 						type: "button",
 						class: "rounded bg-btn-primary px-3 py-2 text-sm text-white",
-						onClick: ve
+						onClick: ye
 					}, "Try again")])) : (h(), a("form", {
 						key: 2,
 						class: "space-y-6 p-6",
-						onSubmit: ae(we, ["prevent"])
+						onSubmit: oe(Te, ["prevent"])
 					}, [
 						t.scope === "company" ? (h(), a("section", Rr, [o("label", zr, [o("input", {
 							type: "checkbox",
 							checked: D.value,
 							disabled: S.value,
-							onChange: Te
+							onChange: Ee
 						}, null, 40, Br), l[11] ||= o("span", null, [o("span", { class: "block text-sm font-medium text-heading" }, "Use a company-specific AI configuration"), o("span", { class: "mt-1 block text-xs text-muted" }, "Override the global provider and models for this company.")], -1)]), D.value ? i("", !0) : (h(), a("p", Vr, "This company is using the global AI configuration."))])) : i("", !0),
-						_e.value ? (h(), a("div", Hr, [o("section", null, [o("label", Ur, [o("input", {
+						ve.value ? (h(), a("div", Hr, [o("section", null, [o("label", Ur, [o("input", {
 							type: "checkbox",
 							checked: ue.value,
-							onChange: l[0] ||= (e) => De("ai_enabled", e)
+							onChange: l[0] ||= (e) => Oe("ai_enabled", e)
 						}, null, 40, Wr), l[12] ||= o("span", null, [o("span", { class: "block text-sm font-medium text-heading" }, "Enable AI Assistant"), o("span", { class: "mt-1 block text-xs text-muted" }, "Allow this provider to power chat and editor text generation.")], -1)])]), ue.value ? (h(), a("div", Gr, [
-							o("label", Kr, [l[13] ||= s("Provider ", -1), T(o("select", {
+							o("label", Kr, [l[13] ||= s("Provider ", -1), w(o("select", {
 								"onUpdate:modelValue": l[1] ||= (e) => d.ai_driver = e,
 								class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2 text-body",
-								onChange: ye
+								onChange: be
 							}, [(h(!0), a(e, null, v(p.value, (e) => (h(), a("option", {
 								key: e.value,
 								value: e.value
@@ -2978,17 +2981,17 @@ var Wn = {
 							]])),
 							pe.value || me.value ? (h(), a("label", Qr, [
 								s("API key" + b(pe.value ? "" : " (optional)") + " ", 1),
-								o("span", $r, [T(o("input", {
+								o("span", $r, [w(o("input", {
 									"onUpdate:modelValue": l[2] ||= (e) => d.ai_api_key = e,
-									type: ie.value ? "text" : "password",
+									type: ae.value ? "text" : "password",
 									autocomplete: "new-password",
 									class: "min-w-0 flex-1 rounded-md border border-line-default bg-surface px-3 py-2 text-body",
-									placeholder: ge.value ? "Stored securely — enter a new key to replace it" : ""
+									placeholder: _e.value ? "Stored securely — enter a new key to replace it" : ""
 								}, null, 8, ei), [[ee, d.ai_api_key]]), o("button", {
 									type: "button",
 									class: "rounded border border-line-default px-3 text-xs text-body hover:bg-hover",
-									onClick: l[3] ||= (e) => ie.value = !ie.value
-								}, b(ie.value ? "Hide" : "Show"), 1)]),
+									onClick: l[3] ||= (e) => ae.value = !ae.value
+								}, b(ae.value ? "Hide" : "Show"), 1)]),
 								l[18] ||= o("span", { class: "mt-1 block text-xs font-normal text-muted" }, "Keys are stored securely. Leave the masked value unchanged to keep the current key.", -1)
 							])) : i("", !0),
 							(h(!0), a(e, null, v(fe.value, (t) => (h(), a("label", {
@@ -2999,12 +3002,12 @@ var Wn = {
 								value: d[`ai_${t.key}`] ?? "",
 								placeholder: t.default,
 								class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2 text-body",
-								onInput: (e) => Oe(t.key, e)
+								onInput: (e) => ke(t.key, e)
 							}, null, 40, ti)) : (h(), a("select", {
 								key: 1,
 								value: d[`ai_${t.key}`] ?? "",
 								class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2 text-body",
-								onChange: (e) => Oe(t.key, e)
+								onChange: (e) => ke(t.key, e)
 							}, [(h(!0), a(e, null, v(t.options, (e) => (h(), a("option", {
 								key: e.value,
 								value: e.value
@@ -3016,48 +3019,48 @@ var Wn = {
 									type: "button",
 									class: "rounded border border-line-default px-3 py-1.5 text-body hover:bg-hover disabled:opacity-50",
 									disabled: j.value,
-									onClick: l[4] ||= (e) => be(!0)
+									onClick: l[4] ||= (e) => xe(!0)
 								}, b(j.value ? "Loading models…" : "Refresh models"), 9, oi), he.value ? (h(), a("span", si, b(he.value), 1)) : A.value.length ? (h(), a("span", ci, b(A.value.length) + " models available from this server.", 1)) : j.value ? i("", !0) : (h(), a("span", li, "Models are read from the server; set the URL (and key if needed) first."))])) : i("", !0),
 								o("div", ui, [o("div", null, [o("label", di, [o("input", {
 									type: "checkbox",
 									checked: d.ai_chat_enabled === "YES",
-									onChange: l[5] ||= (e) => De("ai_chat_enabled", e)
-								}, null, 40, fi), l[19] ||= o("span", { class: "text-sm font-medium text-heading" }, [s("Assistant chat"), o("span", { class: "mt-1 block text-xs font-normal text-muted" }, "Show the conversational AI drawer in company pages.")], -1)]), d.ai_chat_enabled === "YES" ? (h(), a("label", pi, [l[20] ||= s("Chat model", -1), k.value && A.value.length ? T((h(), a("select", {
+									onChange: l[5] ||= (e) => Oe("ai_chat_enabled", e)
+								}, null, 40, fi), l[19] ||= o("span", { class: "text-sm font-medium text-heading" }, [s("Assistant chat"), o("span", { class: "mt-1 block text-xs font-normal text-muted" }, "Show the conversational AI drawer in company pages.")], -1)]), d.ai_chat_enabled === "YES" ? (h(), a("label", pi, [l[20] ||= s("Chat model", -1), k.value && A.value.length ? w((h(), a("select", {
 									key: 0,
 									"onUpdate:modelValue": l[6] ||= (e) => d.ai_chat_model = e,
 									class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2"
-								}, [(h(!0), a(e, null, v(xe(d.ai_chat_model), (e) => (h(), a("option", {
+								}, [(h(!0), a(e, null, v(Se(d.ai_chat_model), (e) => (h(), a("option", {
 									key: e.value,
 									value: e.value
-								}, b(e.label), 9, mi))), 128))], 512)), [[te, d.ai_chat_model]]) : T((h(), a("input", {
+								}, b(e.label), 9, mi))), 128))], 512)), [[te, d.ai_chat_model]]) : w((h(), a("input", {
 									key: 1,
 									"onUpdate:modelValue": l[7] ||= (e) => d.ai_chat_model = e,
 									list: "ai-models",
 									class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2"
-								}, null, 512)), [[w, d.ai_chat_model]])])) : i("", !0)]), o("div", null, [o("label", hi, [o("input", {
+								}, null, 512)), [[ne, d.ai_chat_model]])])) : i("", !0)]), o("div", null, [o("label", hi, [o("input", {
 									type: "checkbox",
 									checked: d.ai_text_generation_enabled === "YES",
-									onChange: l[8] ||= (e) => De("ai_text_generation_enabled", e)
-								}, null, 40, gi), l[21] ||= o("span", { class: "text-sm font-medium text-heading" }, [s("Editor text generation"), o("span", { class: "mt-1 block text-xs font-normal text-muted" }, "Add AI writing tools to rich-text editors.")], -1)]), d.ai_text_generation_enabled === "YES" ? (h(), a("label", _i, [l[22] ||= s("Text generation model", -1), k.value && A.value.length ? T((h(), a("select", {
+									onChange: l[8] ||= (e) => Oe("ai_text_generation_enabled", e)
+								}, null, 40, gi), l[21] ||= o("span", { class: "text-sm font-medium text-heading" }, [s("Editor text generation"), o("span", { class: "mt-1 block text-xs font-normal text-muted" }, "Add AI writing tools to rich-text editors.")], -1)]), d.ai_text_generation_enabled === "YES" ? (h(), a("label", _i, [l[22] ||= s("Text generation model", -1), k.value && A.value.length ? w((h(), a("select", {
 									key: 0,
 									"onUpdate:modelValue": l[9] ||= (e) => d.ai_text_generation_model = e,
 									class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2"
-								}, [(h(!0), a(e, null, v(xe(d.ai_text_generation_model), (e) => (h(), a("option", {
+								}, [(h(!0), a(e, null, v(Se(d.ai_text_generation_model), (e) => (h(), a("option", {
 									key: e.value,
 									value: e.value
-								}, b(e.label), 9, vi))), 128))], 512)), [[te, d.ai_text_generation_model]]) : T((h(), a("input", {
+								}, b(e.label), 9, vi))), 128))], 512)), [[te, d.ai_text_generation_model]]) : w((h(), a("input", {
 									key: 1,
 									"onUpdate:modelValue": l[10] ||= (e) => d.ai_text_generation_model = e,
 									list: "ai-models",
 									class: "mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2"
-								}, null, 512)), [[w, d.ai_text_generation_model]])])) : i("", !0)])]),
+								}, null, 512)), [[ne, d.ai_text_generation_model]])])) : i("", !0)])]),
 								o("datalist", yi, [(h(!0), a(e, null, v(de.value, (e) => (h(), a("option", {
 									key: e.value,
 									value: e.value
 								}, b(e.label), 9, bi))), 128))])
 							])
 						])) : i("", !0)])) : i("", !0),
-						_e.value ? (h(), a("footer", xi, [o("button", {
+						ve.value ? (h(), a("footer", xi, [o("button", {
 							type: "submit",
 							class: "rounded bg-btn-primary px-4 py-2 text-sm font-medium text-white hover:bg-btn-primary-hover disabled:opacity-50",
 							disabled: S.value
@@ -3066,7 +3069,7 @@ var Wn = {
 							type: "button",
 							class: "rounded border border-line-default px-4 py-2 text-sm text-body hover:bg-hover disabled:opacity-50",
 							disabled: S.value || C.value,
-							onClick: Ee
+							onClick: De
 						}, b(C.value ? "Testing…" : "Test connection"), 9, Ci)) : i("", !0)])) : i("", !0)
 					], 32))]),
 					_: 1
@@ -3083,7 +3086,7 @@ window.InvoiceShelf.booting((e, t, n) => {
 		n.notify(e, t);
 	}, f = async (e = !1) => {
 		try {
-			let t = e ? E.adminCapabilities : E.capabilities, { data: s } = await n.client.get(t);
+			let t = e ? T.adminCapabilities : T.capabilities, { data: s } = await n.client.get(t);
 			r.value = !!s.chat, i.value = !!s.text_generation, a.value = !!s.can_manage_company, o.value = !!s.can_manage_global;
 		} catch {
 			r.value = !1, i.value = !1, a.value = !1, o.value = !1;

@@ -38,6 +38,8 @@ const fetchesModels = computed(() => selectedDriver.value?.fetches_models === tr
 const fetchedModels = ref<AiSuggestedModel[]>([])
 const fetchingModels = ref(false)
 const modelsError = ref('')
+/** Only a provider with a Base URL field uses one; for the rest a leftover value must not be sent. */
+const usesBaseUrl = computed(() => fields.value.some((field) => field.key === 'base_url'))
 const hasMaskedKey = computed(() => /[•*]/.test(form.ai_api_key))
 const visibleConfig = computed(() => props.scope === 'admin' || isCustom.value)
 
@@ -97,7 +99,7 @@ async function fetchModels(announce: boolean): Promise<void> {
     const { data } = await props.client.post<{ models?: AiSuggestedModel[] }>(modelsEndpoint.value, {
       ai_driver: form.ai_driver,
       ai_api_key: hasMaskedKey.value ? undefined : form.ai_api_key,
-      ai_base_url: form.ai_base_url,
+      ai_base_url: usesBaseUrl.value ? form.ai_base_url : '',
     })
     fetchedModels.value = data.models ?? []
     const first = fetchedModels.value[0]?.value ?? ''
@@ -127,14 +129,14 @@ function modelChoices(current: string): AiSuggestedModel[] {
 
 function payload(): CompanyAiConfig {
   // The backend recognizes the masked placeholder and retains the stored secret.
-  return { ...form }
+  return { ...form, ai_base_url: usesBaseUrl.value ? form.ai_base_url : '' }
 }
 
 function validate(): string | null {
   if (!aiOn.value) return null
   if (!form.ai_driver) return 'Choose an AI provider.'
   if (needsKey.value && !form.ai_api_key && !hasMaskedKey.value) return 'Enter an API key.'
-  if (form.ai_base_url) {
+  if (usesBaseUrl.value && form.ai_base_url) {
     try { new URL(form.ai_base_url) } catch { return 'Enter a valid base URL.' }
   }
   if (form.ai_chat_enabled === 'YES' && !form.ai_chat_model.trim()) return 'Choose a chat model.'
@@ -180,7 +182,7 @@ async function testConnection(): Promise<void> {
     const { data } = await props.client.post<{ success?: boolean; message?: string; error?: string }>(testEndpoint.value, {
       ai_driver: form.ai_driver,
       ai_api_key: hasMaskedKey.value ? undefined : form.ai_api_key,
-      ai_base_url: form.ai_base_url,
+      ai_base_url: usesBaseUrl.value ? form.ai_base_url : '',
     })
     if (data.success) props.notify('success', data.message ?? 'Connection successful.')
     else props.notify('error', data.message ?? data.error ?? 'The connection test failed.')

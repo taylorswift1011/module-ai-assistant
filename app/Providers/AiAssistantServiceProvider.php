@@ -108,6 +108,7 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
             'label' => 'Claude Code (subscription login)',
             'website' => '',
             'requires_api_key' => false,
+            'uses_base_url' => false,
             'global_only' => true,
             'supported_roles' => ['chat', 'text_generation'],
             'suggested_models' => [

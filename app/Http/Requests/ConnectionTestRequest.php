@@ -12,6 +12,16 @@ use Modules\AiAssistant\Rules\PublicHttpUrl;
 
 final class ConnectionTestRequest extends FormRequest
 {
+    /** A provider without a Base URL field is saved without one, whatever the form still holds. */
+    protected function prepareForValidation(): void
+    {
+        $meta = Registry::driverMeta('ai', (string) $this->input('ai_driver'));
+
+        if (($meta['uses_base_url'] ?? true) === false) {
+            $this->merge(['ai_base_url' => null]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
