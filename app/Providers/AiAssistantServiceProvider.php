@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\AiAssistant\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,6 +20,7 @@ use Modules\AiAssistant\Application\Host\RouterHostApi;
 use Modules\AiAssistant\Application\Tools\GetBillTool;
 use Modules\AiAssistant\Application\Tools\GetCompanyStatsTool;
 use Modules\AiAssistant\Application\Tools\GetCustomerTool;
+use Modules\AiAssistant\Application\Tools\GetExpenseForecastDataTool;
 use Modules\AiAssistant\Application\Tools\GetInvoiceTool;
 use Modules\AiAssistant\Application\Tools\ListExpenseCategoriesTool;
 use Modules\AiAssistant\Application\Tools\ListOverdueInvoicesTool;
@@ -31,6 +33,7 @@ use Modules\AiAssistant\Application\Tools\SearchCustomersTool;
 use Modules\AiAssistant\Application\Tools\SearchInvoicesTool;
 use Modules\AiAssistant\Application\Tools\SearchItemsTool;
 use Modules\AiAssistant\Application\Tools\SearchSuppliersTool;
+use Modules\AiAssistant\Console\RunScheduledTasksCommand;
 use Modules\AiAssistant\Drivers\ClaudeCliDriver;
 use Modules\AiAssistant\Drivers\LocalOpenAiDriver;
 use Modules\AiAssistant\Drivers\OpenRouterDriver;
@@ -57,7 +60,7 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
                 $app->make(GetCompanyStatsTool::class), $app->make(RankTopCustomersTool::class),
                 $app->make(RankTopItemsTool::class), $app->make(RankExpenseCategoriesTool::class),
                 $app->make(SearchBillsTool::class), $app->make(GetBillTool::class),
-                $app->make(SearchSuppliersTool::class),
+                $app->make(SearchSuppliersTool::class), $app->make(GetExpenseForecastDataTool::class),
             ]);
         });
     }
@@ -140,5 +143,14 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
             return Limit::perMinute(30)->by($userId.':'.$request->header('company', 'none'));
         });
         $this->loadRoutesFrom($modulePath.'/routes/api.php');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([RunScheduledTasksCommand::class]);
+        }
+
+        // Only while the module is enabled: a disabled module's provider is not loaded.
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('ai-assistant:run-scheduled')->everyMinute()->withoutOverlapping(30)->runInBackground();
+        });
     }
 }

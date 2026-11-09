@@ -65,3 +65,29 @@ export interface AiCapabilities {
   can_manage_company?: boolean
   can_manage_global?: boolean
 }
+
+export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly' | 'month_end'
+
+export interface ScheduledTaskInput {
+  name: string
+  prompt: string
+  frequency: ScheduleFrequency
+  day: number | null
+  run_at: string
+  enabled: boolean
+}
+
+export interface ScheduledTask extends ScheduledTaskInput {
+  id: number
+  runs_as_you: boolean
+  next_run_at: string | null
+  last_run_at: string | null
+  last_status: 'ok' | 'failed' | 'skipped' | null
+  last_error: string | null
+  last_conversation_id: number | null
+}
+
+export interface ScheduledTaskTemplate extends Omit<ScheduledTaskInput, 'enabled'> {
+  key: string
+  description: string
+}

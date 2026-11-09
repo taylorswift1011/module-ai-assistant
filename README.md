@@ -44,6 +44,17 @@ This fork adds a **Local AI (OpenAI-compatible)** provider for a model you run y
 
 Only a super administrator can select it. Redirects are not followed. The assistant's data tools rely on tool calling, so use a model that supports it; text generation works with any chat model.
 
+## Scheduled tasks and the month-end forecast
+
+A company owner can have the assistant run a prompt on a schedule under **Company Settings → AI scheduled tasks**: daily, weekly, monthly on a set day, or on the last day of every month, at a time in the company timezone.
+
+- A task runs as the member who created it, with exactly that member's permissions, and each run is a new conversation in their AI chat history. Nothing is sent anywhere else.
+- The scheduler is the host's own (`schedule:run` must be running, as it is for recurring invoices). The module adds one command, `ai-assistant:run-scheduled`, that runs every minute and does nothing unless a task is due. `php artisan ai-assistant:run-scheduled --task=ID` runs one task now.
+- A run is claimed before it starts, so overlapping runs cannot repeat it. A failed run is recorded on the task and is not retried until the next scheduled time.
+- The assistant stays read-only. A scheduled task can report and recommend; it cannot change data.
+
+The **Month-end forecast and salary recommendation** template asks the assistant for next month's expected costs and a suggested shareholder salary. The arithmetic is done by the `get_expense_forecast_data` tool, not by the model: expense and supplier-bill history by category (owner pay kept separate), a three-month average projection, bills and recurring costs already due, unpaid customer invoices, and the average customer receipts. It states its limits: there is no bank balance in InvoiceShelf, receipts include tax charged on invoices, and the figures are an estimate, not tax or accounting advice. The prompt is yours to edit.
+
 ## Privacy and access
 
 When someone uses a capability, their prompt and the business data that the selected model requests through the module's read-only tools are sent to OpenRouter and the chosen model provider. The assistant is scoped to the active company and respects the user's InvoiceShelf permissions; it cannot write invoices, expenses, customers, payments, or other business records.

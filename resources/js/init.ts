@@ -6,6 +6,7 @@ import AiChatOverlay from './components/AiChatOverlay.vue'
 import AiHeaderAction from './components/AiHeaderAction.vue'
 import AiTextAction from './components/AiTextAction.vue'
 import AiConfigurationPage from './pages/AiConfigurationPage.vue'
+import AiScheduledTasksPage from './pages/AiScheduledTasksPage.vue'
 import type { AiCapabilities } from './types/ai'
 
 window.InvoiceShelf.booting((_app, _router, extensions) => {
@@ -75,6 +76,11 @@ window.InvoiceShelf.booting((_app, _router, extensions) => {
   })
   registerSettings(extensions, 'admin', canManageGlobal, notify)
   registerSettings(extensions, 'company', canManageCompany, notify)
+  extensions.registerCompanySettingsPage({
+    id: 'ai-assistant.company-schedules', title: 'AI scheduled tasks', icon: 'ClockIcon', path: 'ai-scheduled-tasks',
+    priority: 81, visible: () => canManageCompany.value && chatEnabled.value,
+    component: defineComponent({ setup: () => () => h(AiScheduledTasksPage, { client: extensions.client, notify }) }),
+  })
 })
 
 function registerSettings(
