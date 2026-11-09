@@ -12,13 +12,14 @@ const props = defineProps<{
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const FREQUENCIES = [
+  { value: 'month_end_weekday', label: 'Last weekday of every month (Mon–Fri)' },
   { value: 'month_end', label: 'Last day of every month' },
   { value: 'monthly', label: 'Monthly, on a set day' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'daily', label: 'Every day' },
 ] as const
 
-const blank = (): ScheduledTaskInput => ({ name: '', prompt: '', frequency: 'month_end', day: null, run_at: '18:00', enabled: true })
+const blank = (): ScheduledTaskInput => ({ name: '', prompt: '', frequency: 'month_end_weekday', day: null, run_at: '16:00', enabled: true })
 
 const tasks = ref<ScheduledTask[]>([])
 const templates = ref<ScheduledTaskTemplate[]>([])
@@ -125,6 +126,7 @@ async function remove(task: ScheduledTask): Promise<void> {
 
 function describe(task: ScheduledTaskInput): string {
   const at = ` at ${task.run_at}`
+  if (task.frequency === 'month_end_weekday') return `Last weekday of every month${at}`
   if (task.frequency === 'month_end') return `Last day of every month${at}`
   if (task.frequency === 'monthly') return `Day ${task.day} of every month${at}`
   if (task.frequency === 'weekly') return `Every ${WEEKDAYS[(task.day ?? 1) - 1]}${at}`

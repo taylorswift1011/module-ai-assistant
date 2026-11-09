@@ -66,7 +66,7 @@ export interface AiCapabilities {
   can_manage_global?: boolean
 }
 
-export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly' | 'month_end'
+export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly' | 'month_end' | 'month_end_weekday'
 
 export interface ScheduledTaskInput {
   name: string

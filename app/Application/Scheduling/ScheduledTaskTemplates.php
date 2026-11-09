@@ -15,10 +15,10 @@ final class ScheduledTaskTemplates
         return [[
             'key' => self::MONTH_END_FORECAST,
             'name' => 'Month-end forecast and salary recommendation',
-            'description' => 'On the last day of each month: next month\'s expected costs, what is already due, and a suggested shareholder salary.',
-            'frequency' => TaskSchedule::MONTH_END,
+            'description' => 'On the last weekday of each month: next month\'s expected costs, what is already due, and a suggested shareholder salary.',
+            'frequency' => TaskSchedule::MONTH_END_WEEKDAY,
             'day' => null,
-            'run_at' => '18:00',
+            'run_at' => '16:00',
             'prompt' => <<<'TEXT'
 It is the end of the month. Prepare my expense forecast for next month and a recommended shareholder salary.
 

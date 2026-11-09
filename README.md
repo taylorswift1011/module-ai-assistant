@@ -46,7 +46,7 @@ Only a super administrator can select it. Redirects are not followed. The assist
 
 ## Scheduled tasks and the month-end forecast
 
-A company owner can have the assistant run a prompt on a schedule under **Company Settings → AI scheduled tasks**: daily, weekly, monthly on a set day, or on the last day of every month, at a time in the company timezone.
+A company owner can have the assistant run a prompt on a schedule under **Company Settings → AI scheduled tasks**: daily, weekly, monthly on a set day, on the last day of every month, or on the last weekday (Monday to Friday) of every month, at a time in the company timezone.
 
 - A task runs as the member who created it, with exactly that member's permissions, and each run is a new conversation in their AI chat history. Nothing is sent anywhere else.
 - The scheduler is the host's own (`schedule:run` must be running, as it is for recurring invoices). The module adds one command, `ai-assistant:run-scheduled`, that runs every minute and does nothing unless a task is due. `php artisan ai-assistant:run-scheduled --task=ID` runs one task now.

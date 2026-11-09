@@ -25,7 +25,10 @@ final class TaskSchedule
 
     public const MONTH_END = 'month_end';
 
-    public const FREQUENCIES = [self::DAILY, self::WEEKLY, self::MONTHLY, self::MONTH_END];
+    /** The last Monday to Friday of the month; public holidays are not considered. */
+    public const MONTH_END_WEEKDAY = 'month_end_weekday';
+
+    public const FREQUENCIES = [self::DAILY, self::WEEKLY, self::MONTHLY, self::MONTH_END, self::MONTH_END_WEEKDAY];
 
     /** The first run strictly after `$after`, as a UTC instant. */
     public static function next(string $frequency, ?int $day, string $runAt, string $timezone, CarbonInterface $after): CarbonImmutable
@@ -62,6 +65,19 @@ final class TaskSchedule
             // Day 31 means "the 31st, or the last day of a shorter month".
             self::MONTHLY => $date->day === min($day ?? 1, $date->daysInMonth),
             self::MONTH_END => $date->day === $date->daysInMonth,
+            self::MONTH_END_WEEKDAY => $date->isSameDay(self::lastWeekdayOf($date)),
         };
+    }
+
+    /** The last Monday to Friday on or before the end of the date's month. */
+    private static function lastWeekdayOf(CarbonImmutable $date): CarbonImmutable
+    {
+        $last = $date->endOfMonth()->startOfDay();
+
+        while ($last->isWeekend()) {
+            $last = $last->subDay();
+        }
+
+        return $last;
     }
 }

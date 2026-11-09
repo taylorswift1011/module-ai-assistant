@@ -23,6 +23,7 @@ use Modules\AiAssistant\Application\AiAssistantService;
 use Modules\AiAssistant\Application\AiConfigurationService;
 use Modules\AiAssistant\Application\AiToolRegistry;
 use Modules\AiAssistant\Application\Scheduling\ScheduledTaskRunner;
+use Modules\AiAssistant\Application\Scheduling\ScheduledTaskTemplates;
 use Modules\AiAssistant\Http\Company\ScheduledTaskController;
 use Modules\AiAssistant\Http\Requests\ScheduledTaskRequest;
 use Modules\AiAssistant\Models\AiConversation;
@@ -252,6 +253,21 @@ final class ScheduledTasksTest extends TestCase
         self::assertSame(1, $this->runner->runDue(CarbonImmutable::now()));
 
         self::assertSame(422, $controller->runNow($http(), $off->id)->getStatusCode());
+    }
+
+    public function test_the_month_end_template_is_the_last_weekday_at_four(): void
+    {
+        $template = ScheduledTaskTemplates::all()[0];
+
+        self::assertSame('month_end_weekday', $template['frequency']);
+        self::assertSame('16:00', $template['run_at']);
+
+        $request = $this->request(['name' => $template['name'], 'prompt' => $template['prompt'], 'frequency' => $template['frequency'], 'run_at' => $template['run_at']]);
+        $request->validateResolved();
+        (new ScheduledTaskController($this->runner))->store($request);
+
+        // Test clock: 18:00:30 NZDT on Monday 30 Nov 2026, after the 16:00 run; the next is Thursday 31 Dec.
+        self::assertSame('2026-12-31 03:00:00', AiScheduledTask::query()->firstOrFail()->next_run_at->utc()->toDateTimeString());
     }
 
     public function test_changing_the_schedule_retimes_the_task_and_switching_off_clears_it(): void

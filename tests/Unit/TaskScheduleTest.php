@@ -27,6 +27,25 @@ final class TaskScheduleTest extends TestCase
         self::assertSame('2028-02-29 18:00 NZDT', $this->next('month_end', null, '18:00', '2028-02-01 00:00:00'), 'leap year');
     }
 
+    public function test_last_weekday_skips_a_weekend_month_end(): void
+    {
+        // 31 Oct 2026 is a Saturday, so the last weekday is Friday the 30th; 30 Nov 2026 is a Monday.
+        self::assertSame('2026-10-30 16:00 NZDT', $this->next('month_end_weekday', null, '16:00', '2026-10-09 00:00:00'));
+        self::assertSame('2026-11-30 16:00 NZDT', $this->next('month_end_weekday', null, '16:00', '2026-10-30 04:00:01'));
+        // 31 Jan 2027 is a Sunday: Friday the 29th. 28 Feb 2027 is a Sunday: Friday the 26th.
+        self::assertSame('2027-01-29 16:00 NZDT', $this->next('month_end_weekday', null, '16:00', '2027-01-01 00:00:00'));
+        self::assertSame('2027-02-26 16:00 NZDT', $this->next('month_end_weekday', null, '16:00', '2027-02-01 00:00:00'));
+        // 30 Apr 2027 is a Friday; the clocks went back on 4 April, so it is NZST.
+        self::assertSame('2027-04-30 16:00 NZST', $this->next('month_end_weekday', null, '16:00', '2027-04-05 00:00:00'));
+    }
+
+    public function test_last_weekday_moves_on_once_the_run_has_happened(): void
+    {
+        // 16:00 NZDT on Monday 30 Nov 2026 is 03:00 UTC.
+        self::assertSame('2026-12-31 16:00 NZDT', $this->next('month_end_weekday', null, '16:00', '2026-11-30 03:00:00'));
+        self::assertSame('2026-11-30 16:00 NZDT', $this->next('month_end_weekday', null, '16:00', '2026-11-30 02:59:59'));
+    }
+
     public function test_a_run_that_just_happened_moves_on_to_the_next_period(): void
     {
         // 2026-11-30 18:00 NZDT is 2026-11-30 05:00 UTC.

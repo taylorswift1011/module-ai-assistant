@@ -3129,6 +3129,10 @@ var Gn = {
 			"Sunday"
 		], d = [
 			{
+				value: "month_end_weekday",
+				label: "Last weekday of every month (Mon–Fri)"
+			},
+			{
 				value: "month_end",
 				label: "Last day of every month"
 			},
@@ -3147,9 +3151,9 @@ var Gn = {
 		], f = () => ({
 			name: "",
 			prompt: "",
-			frequency: "month_end",
+			frequency: "month_end_weekday",
 			day: null,
-			run_at: "18:00",
+			run_at: "16:00",
 			enabled: !0
 		}), x = _([]), S = _([]), w = _("UTC"), E = _(!0), O = _(""), ie = _(!1), A = _(null), ae = _(null), j = _(!1), M = g(f()), N = n(() => M.frequency === "weekly" || M.frequency === "monthly");
 		m(() => {
@@ -3242,7 +3246,7 @@ var Gn = {
 		}
 		function de(e) {
 			let t = ` at ${e.run_at}`;
-			return e.frequency === "month_end" ? `Last day of every month${t}` : e.frequency === "monthly" ? `Day ${e.day} of every month${t}` : e.frequency === "weekly" ? `Every ${u[(e.day ?? 1) - 1]}${t}` : `Every day${t}`;
+			return e.frequency === "month_end_weekday" ? `Last weekday of every month${t}` : e.frequency === "month_end" ? `Last day of every month${t}` : e.frequency === "monthly" ? `Day ${e.day} of every month${t}` : e.frequency === "weekly" ? `Every ${u[(e.day ?? 1) - 1]}${t}` : `Every day${t}`;
 		}
 		function fe(e) {
 			return e ? new Intl.DateTimeFormat(void 0, {
