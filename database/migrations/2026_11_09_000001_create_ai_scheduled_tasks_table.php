@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedInteger('user_id');
             $table->string('name', 120);
             $table->text('prompt');
-            $table->string('frequency', 16);
+            $table->string('frequency', 24);
             // Weekday 1-7 (Monday-Sunday) for weekly, day of the month for monthly, unused otherwise.
             $table->unsignedTinyInteger('day')->nullable();
             // Local time of day in the company timezone, HH:MM.

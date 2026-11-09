@@ -75,6 +75,14 @@ final class TaskScheduleTest extends TestCase
         self::assertSame('2026-09-27 18:00 NZDT', $this->next('daily', null, '18:00', '2026-09-27 00:00:00'));
     }
 
+    public function test_every_frequency_fits_the_database_column(): void
+    {
+        // SQLite ignores column lengths, MySQL does not: the column is a varchar(24).
+        foreach (TaskSchedule::FREQUENCIES as $frequency) {
+            self::assertLessThanOrEqual(24, strlen($frequency), $frequency);
+        }
+    }
+
     public function test_it_rejects_what_cannot_be_scheduled(): void
     {
         $this->expectException(InvalidArgumentException::class);
