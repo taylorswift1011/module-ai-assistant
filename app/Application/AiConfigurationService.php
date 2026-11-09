@@ -25,6 +25,22 @@ class AiConfigurationService
         'ai_chat_model', 'ai_text_generation_enabled', 'ai_text_generation_model',
     ];
 
+    /**
+     * The host's global settings table keeps `value` in a varchar(255), and an
+     * encrypted API key is about 4/3 of its length plus 190 bytes of envelope,
+     * so any key over ~38 characters overflows it. The encrypted key is
+     * therefore split across `ai_api_key`, `ai_api_key_2` and so on.
+     */
+    public const KEY_CHUNK_LENGTH = 240;
+
+    public const KEY_MAX_PARTS = 10;
+
+    /** @var list<string> The continuation rows, so uninstall can remove them too. */
+    public const KEY_PART_KEYS = [
+        'ai_api_key_2', 'ai_api_key_3', 'ai_api_key_4', 'ai_api_key_5', 'ai_api_key_6',
+        'ai_api_key_7', 'ai_api_key_8', 'ai_api_key_9', 'ai_api_key_10',
+    ];
+
     public function __construct(private readonly SettingsStore $settings) {}
 
     /** @return array<string, mixed> */
@@ -40,6 +56,10 @@ class AiConfigurationService
         foreach (self::SETTING_KEYS as $key) {
             $config[$key] = $this->settings->getCompany($companyId, 'company_'.$key);
         }
+        $config['ai_api_key'] = $this->joinKeyParts(
+            $config['ai_api_key'],
+            fn (string $part): mixed => $this->settings->getCompany($companyId, 'company_'.$part),
+        );
 
         return array_merge([
             'use_custom_ai_config' => $this->settings->getCompany($companyId, 'use_custom_ai_config', 'NO'),
@@ -50,6 +70,15 @@ class AiConfigurationService
     public function saveGlobalConfig(array $payload): void
     {
         foreach ($this->storageValues($payload) as $key => $value) {
+            if ($key === 'ai_api_key') {
+                $this->writeKeyParts(
+                    $value,
+                    fn (string $part, string $chunk) => $this->settings->putGlobal($part, $chunk),
+                    fn (string $part) => $this->settings->deleteGlobal($part),
+                );
+
+                continue;
+            }
             $this->settings->putGlobal($key, $value);
         }
     }
@@ -64,6 +93,15 @@ class AiConfigurationService
         }
 
         foreach ($this->storageValues($payload) as $key => $value) {
+            if ($key === 'ai_api_key') {
+                $this->writeKeyParts(
+                    $value,
+                    fn (string $part, string $chunk) => $this->settings->putCompany($companyId, 'company_'.$part, $chunk),
+                    fn (string $part) => $this->settings->deleteCompany($companyId, 'company_'.$part),
+                );
+
+                continue;
+            }
             $this->settings->putCompany($companyId, 'company_'.$key, $value);
         }
         $this->settings->putCompany($companyId, 'use_custom_ai_config', 'YES');
@@ -150,8 +188,51 @@ class AiConfigurationService
         foreach (self::SETTING_KEYS as $key) {
             $values[$key] = $this->settings->getGlobal($key);
         }
+        $values['ai_api_key'] = $this->joinKeyParts(
+            $values['ai_api_key'],
+            fn (string $part): mixed => $this->settings->getGlobal($part),
+        );
 
         return $values;
+    }
+
+    /**
+     * Put the encrypted key back together from its rows.
+     *
+     * @param  callable(string): mixed  $read  reads one continuation row by its key
+     */
+    private function joinKeyParts(mixed $first, callable $read): mixed
+    {
+        if (! is_string($first) || $first === '') {
+            return $first;
+        }
+
+        foreach (self::KEY_PART_KEYS as $part) {
+            $next = $read($part);
+            if (! is_string($next) || $next === '') {
+                break;
+            }
+            $first .= $next;
+        }
+
+        return $first;
+    }
+
+    /**
+     * Store the (encrypted) key as rows that fit the host column, and clear
+     * any continuation rows a longer earlier key left behind.
+     *
+     * @param  callable(string, string): mixed  $put
+     * @param  callable(string): mixed  $delete
+     */
+    private function writeKeyParts(mixed $value, callable $put, callable $delete): void
+    {
+        $chunks = is_string($value) && $value !== '' ? str_split($value, self::KEY_CHUNK_LENGTH) : [''];
+        $put('ai_api_key', $chunks[0]);
+
+        foreach (self::KEY_PART_KEYS as $index => $part) {
+            isset($chunks[$index + 1]) ? $put($part, $chunks[$index + 1]) : $delete($part);
+        }
     }
 
     /** @param array<string, mixed> $settings @return array<string, mixed> */

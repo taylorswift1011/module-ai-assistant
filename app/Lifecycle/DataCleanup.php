@@ -15,7 +15,7 @@ final class DataCleanup implements DataCleanupContract
 
     public function cleanup(): void
     {
-        foreach (AiConfigurationService::SETTING_KEYS as $key) {
+        foreach ([...AiConfigurationService::SETTING_KEYS, ...AiConfigurationService::KEY_PART_KEYS] as $key) {
             $this->settings->deleteGlobal($key);
             $this->settings->deleteCompanyForAll('company_'.$key);
         }
