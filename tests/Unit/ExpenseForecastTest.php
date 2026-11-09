@@ -184,4 +184,109 @@ final class ExpenseForecastTest extends TestCase
         self::assertStringContainsString('no bank or cash balance', strtolower(implode(' ', $result['caveats'])));
         self::assertStringContainsString('GST', implode(' ', $result['caveats']));
     }
+
+    /** @return array<string, mixed> */
+    private function gstRoutes(array $invoices): array
+    {
+        return [
+            'bills' => ['data' => [
+                // 115.00 bill with 15.00 GST in October.
+                ['document_date' => '2026-10-04', 'base_total' => 11500, 'total' => 11500, 'tax' => 1500, 'exchange_rate' => 1, 'items' => []],
+            ], 'meta' => ['last_page' => 1]],
+            'tax-types' => ['data' => [
+                ['name' => 'Zero rated', 'percent' => '0.00'],
+                ['name' => 'GST (purchases)', 'percent' => '15.00', 'compound_tax' => false],
+                ['name' => 'GST', 'percent' => '15.00', 'compound_tax' => false],
+            ]],
+            'invoices' => ['data' => $invoices, 'meta' => ['last_page' => 1]],
+        ];
+    }
+
+    private function invoice(string $date, int $total, int $tax, string $status = 'SENT'): array
+    {
+        return ['invoice_date' => $date, 'total' => $total, 'base_total' => $total, 'tax' => $tax, 'status' => $status, 'exchange_rate' => 1];
+    }
+
+    public function test_gst_uses_recorded_tax_and_treats_older_taxless_invoices_as_gst_inclusive(): void
+    {
+        $result = $this->forecast($this->gstRoutes([
+            $this->invoice('2026-08-10', 115000, 0),      // before GST was recorded: 1150.00 x 15/115 = 150.00
+            $this->invoice('2026-09-10', 230000, 0),      // 300.00
+            $this->invoice('2026-10-10', 345000, 45000),  // recorded: 450.00
+            $this->invoice('2026-10-10', 115000, 0),      // same day as the first recorded GST: still GST-inclusive, +150.00
+            $this->invoice('2026-10-20', 50000, 0),       // after recording began: zero-rated, not estimated
+            $this->invoice('2026-10-25', 99999, 0, 'DRAFT'),
+        ]));
+
+        $gst = $result['gst'];
+        self::assertTrue($gst['available']);
+        self::assertSame(15.0, $gst['rate_percent']);
+        self::assertStringContainsString('(GST)', $gst['rate_source'], 'a purchases tax type at the same rate must not name the sales rate');
+        $months = array_column($gst['months'], null, 'month');
+        self::assertSame(150.0, $months['2026-08']['sales_gst']);
+        self::assertSame(150.0, $months['2026-08']['of_which_estimated']);
+        self::assertSame(600.0, $months['2026-10']['sales_gst']);
+        self::assertSame(150.0, $months['2026-10']['of_which_estimated']);
+        self::assertSame(15.0, $months['2026-10']['purchases_gst']);
+        // Aug-Oct sales GST averages (150 + 300 + 600) / 3 = 350; purchases GST averages 15 / 3 = 5.
+        self::assertSame(350.0, $gst['recent_average']['sales_gst']);
+        self::assertSame(5.0, $gst['recent_average']['purchases_gst']);
+        self::assertSame(345.0, $gst['set_aside_per_month']);
+    }
+
+    public function test_what_is_left_for_owner_pay_is_after_the_gst_is_put_away(): void
+    {
+        $result = $this->forecast($this->gstRoutes([$this->invoice('2026-10-10', 345000, 45000)]));
+
+        // Average receipts 4500.00 less the running costs (hosting plus the October bill) less the GST set aside
+        // (450 / 3 - 15 / 3 = 145.00).
+        self::assertSame(145.0, $result['gst']['set_aside_per_month']);
+        $running = $result['projection']['running_costs_excluding_owner_pay'];
+        self::assertSame(338.33, $running);
+        self::assertSame(round(4500.0 - $running - 145.0, 2), $result['projection']['available_for_owner_pay_after_gst']);
+    }
+
+    public function test_gst_says_why_it_is_missing_rather_than_guessing(): void
+    {
+        $result = $this->forecast(['bills' => ['data' => [], 'meta' => ['last_page' => 1]]]);
+
+        self::assertFalse($result['gst']['available']);
+        self::assertStringContainsString('could not be worked out', $result['gst']['reason']);
+        self::assertNull($result['projection']['available_for_owner_pay_after_gst']);
+    }
+
+    public function test_a_company_with_no_taxable_rate_gets_no_gst_figure(): void
+    {
+        $routes = $this->gstRoutes([]);
+        $routes['tax-types'] = ['data' => [['name' => 'Zero rated', 'percent' => '0.00']]];
+
+        self::assertFalse($this->forecast($routes)['gst']['available']);
+    }
+
+    public function test_the_gst_modules_recommendations_are_included_when_it_is_installed(): void
+    {
+        $result = $this->forecast($this->gstRoutes([]) + ['gst/recommendations' => [
+            'open' => 2, 'to_set_aside' => 12345,
+            'data' => [
+                ['kind' => 'set_aside', 'invoice_number' => 'INV-13', 'customer' => 'Hygiene Systems', 'payment_amount' => 82333, 'gst_amount' => 10739, 'estimated' => true],
+                ['kind' => 'no_gst_recorded', 'invoice_number' => 'INV-14', 'customer' => 'BSI', 'payment_amount' => 5000, 'gst_amount' => 1606, 'estimated' => false],
+            ],
+        ]]);
+
+        $rec = $result['gst']['gst_module_recommendations'];
+        self::assertSame('Gst module', $rec['source']);
+        self::assertSame(2, $rec['open']);
+        self::assertSame(123.45, $rec['gst_to_set_aside']);
+        self::assertSame(['Set the GST from this payment aside', 'Fix this invoice: it records no GST'], array_column($rec['recommendations'], 'action'));
+        self::assertSame(107.39, $rec['recommendations'][0]['gst']);
+        self::assertTrue($rec['recommendations'][0]['estimated']);
+    }
+
+    public function test_without_the_gst_module_the_forecast_stands_on_its_own_figure(): void
+    {
+        $result = $this->forecast($this->gstRoutes([$this->invoice('2026-10-10', 345000, 45000)]));
+
+        self::assertArrayNotHasKey('gst_module_recommendations', $result['gst']);
+        self::assertTrue($result['gst']['available']);
+    }
 }

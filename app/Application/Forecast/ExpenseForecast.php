@@ -50,13 +50,10 @@ final class ExpenseForecast
 
         $warnings = [];
         $categoryNames = array_column($this->data->expenseCategories($companyId), 'name', 'id');
-        $billCosts = $this->billCosts(
-            $companyId,
-            $targetStart->subMonths($historyMonths)->toDateString(),
-            $targetStart->subDay()->toDateString(),
-            $categoryNames,
-            $warnings,
-        );
+        $historyFrom = $targetStart->subMonths($historyMonths)->toDateString();
+        $historyTo = $targetStart->subDay()->toDateString();
+        $billTax = [];
+        $billCosts = $this->billCosts($companyId, $historyFrom, $historyTo, $categoryNames, $warnings, $billTax);
 
         $months = [];
         $categories = [];
@@ -125,6 +122,7 @@ final class ExpenseForecast
         }
         usort($categoryRows, static fn (array $a, array $b): int => $b['average_last_'.self::AVERAGE_MONTHS.'_months'] <=> $a['average_last_'.self::AVERAGE_MONTHS.'_months']);
 
+        $gst = $this->gst($companyId, $historyFrom, $historyTo, $billTax, $window, $major);
         $receiptsAverage = $average(array_column($months, 'received', 'month'), $window);
         $invoicedAverage = $average(array_column($months, 'invoiced', 'month'), $window);
 
@@ -163,7 +161,11 @@ final class ExpenseForecast
                 'customer_receipts_recent_average' => $major($receiptsAverage),
                 'invoiced_recent_average' => $major($invoicedAverage),
                 'surplus_before_owner_pay' => $major($receiptsAverage - $projectedRunning),
+                // What is left once the GST for the return is put aside; null when GST could not be worked out.
+                'available_for_owner_pay_after_gst' => $gst['available'] ? $major($receiptsAverage - $projectedRunning - $gst['_set_aside_minor']) : null,
             ],
+            'gst' => array_diff_key($gst, ['_set_aside_minor' => true])
+                + (($recommendations = $this->gstRecommendations($companyId, $major)) === null ? [] : ['gst_module_recommendations' => $recommendations]),
             'known_commitments' => $this->commitments($companyId, $targetStart, $targetEnd, $precision, $today),
             'receivables' => $this->receivables($companyId, $targetEnd, $major),
         ];
@@ -178,9 +180,10 @@ final class ExpenseForecast
      *
      * @param  array<int|string, string>  $categoryNames
      * @param  list<string>  $warnings
+     * @param  array<string, float>  $taxByMonth  filled with the tax recorded on the bills, by month, in minor units
      * @return array<string, array<string, float>> month => category name => amount
      */
-    private function billCosts(int $companyId, string $from, string $to, array $categoryNames, array &$warnings): array
+    private function billCosts(int $companyId, string $from, string $to, array $categoryNames, array &$warnings, array &$taxByMonth = []): array
     {
         $costs = [];
 
@@ -193,6 +196,7 @@ final class ExpenseForecast
                     $items = $bill['items'] ?? [];
                     $itemsTotal = array_sum(array_map(static fn (array $item): float => (float) ($item['total'] ?? 0), $items));
                     $billTotal = (float) ($bill['base_total'] ?? $bill['total'] ?? 0);
+                    $taxByMonth[$month] = ($taxByMonth[$month] ?? 0) + (float) ($bill['tax'] ?? 0) * (float) ($bill['exchange_rate'] ?? 1 ?: 1);
 
                     if ($items === [] || $itemsTotal <= 0) {
                         $costs[$month]['Uncategorised'] = ($costs[$month]['Uncategorised'] ?? 0) + $billTotal;
@@ -215,6 +219,157 @@ final class ExpenseForecast
         }
 
         return $costs;
+    }
+
+    /**
+     * GST charged on sales less GST paid on bills, month by month, and the amount to put aside.
+     *
+     * Worked out from the invoices and bills themselves, not from any tax
+     * module. An invoice with no tax recorded on it, dated on or before the
+     * first invoice that records GST, is treated as GST-inclusive and its GST is its total times
+     * rate / (100 + rate); the rate is the highest percentage among the
+     * company's tax types. GST on direct expenses (not entered as bills) is
+     * not included.
+     *
+     * @param  array<string, float>  $billTax  minor units by month
+     * @param  list<string>  $window  the complete months averaged
+     * @return array<string, mixed>
+     */
+    private function gst(int $companyId, string $from, string $to, array $billTax, array $window, callable $major): array
+    {
+        $unavailable = static fn (string $why): array => ['available' => false, 'reason' => $why, '_set_aside_minor' => 0.0];
+
+        try {
+            $rate = 0.0;
+            $rateName = null;
+            foreach ($this->host->get('tax-types', ['limit' => 50], $companyId)['data'] ?? [] as $type) {
+                $percent = (float) ($type['percent'] ?? 0);
+                $name = (string) ($type['name'] ?? '');
+                // On a tie the sales tax type wins over one named for purchases.
+                $better = $percent > $rate || ($percent === $rate && $percent > 0 && stripos((string) $rateName, 'purchase') !== false && stripos($name, 'purchase') === false);
+                if ($better && ! ($type['compound_tax'] ?? false)) {
+                    $rate = $percent;
+                    $rateName = $name;
+                }
+            }
+            if ($rate <= 0) {
+                return $unavailable('The company has no tax type with a rate, so GST cannot be worked out.');
+            }
+
+            $invoices = [];
+            for ($page = 1; $page <= 10; $page++) {
+                $response = $this->host->get('invoices', ['from_date' => $from, 'to_date' => $to, 'limit' => 100, 'page' => $page], $companyId);
+                $rows = $response['data'] ?? [];
+                array_push($invoices, ...$rows);
+                if (count($rows) < 100 || $page >= (int) ($response['meta']['last_page'] ?? $page)) {
+                    break;
+                }
+            }
+        } catch (HostApiException $e) {
+            return $unavailable('GST could not be worked out ('.$e->getMessage().').');
+        }
+
+        $invoices = array_values(array_filter($invoices, static fn (array $i): bool => ($i['status'] ?? '') !== 'DRAFT'));
+        $recordingFrom = null;
+        foreach ($invoices as $invoice) {
+            if ((float) ($invoice['tax'] ?? 0) > 0) {
+                $date = substr((string) $invoice['invoice_date'], 0, 10);
+                $recordingFrom = $recordingFrom === null || $date < $recordingFrom ? $date : $recordingFrom;
+            }
+        }
+
+        $sales = [];
+        $estimated = [];
+        foreach ($invoices as $invoice) {
+            $month = substr((string) ($invoice['invoice_date'] ?? ''), 0, 7);
+            $fx = (float) ($invoice['exchange_rate'] ?? 1) ?: 1.0;
+            $tax = (float) ($invoice['tax'] ?? 0) * $fx;
+            $date = substr((string) ($invoice['invoice_date'] ?? ''), 0, 10);
+
+            if ($tax == 0.0 && ($recordingFrom === null || $date <= $recordingFrom)) {
+                $tax = (float) ($invoice['base_total'] ?? $invoice['total'] ?? 0) * $rate / (100 + $rate);
+                $estimated[$month] = ($estimated[$month] ?? 0) + $tax;
+            }
+            $sales[$month] = ($sales[$month] ?? 0) + $tax;
+        }
+
+        $months = [];
+        foreach (array_unique([...array_keys($sales), ...array_keys($billTax)]) as $month) {
+            sort($window);
+            $months[$month] = [
+                'month' => $month,
+                'sales_gst' => $major($sales[$month] ?? 0),
+                'of_which_estimated' => $major($estimated[$month] ?? 0),
+                'purchases_gst' => $major($billTax[$month] ?? 0),
+                'net_gst' => $major(($sales[$month] ?? 0) - ($billTax[$month] ?? 0)),
+            ];
+        }
+        ksort($months);
+
+        $mean = static fn (array $byMonth): float => $window === [] ? 0.0
+            : array_sum(array_map(static fn (string $m): float => (float) ($byMonth[$m] ?? 0), $window)) / count($window);
+        $salesAverage = $mean($sales);
+        $purchasesAverage = $mean($billTax);
+        $setAside = max(0.0, $salesAverage - $purchasesAverage);
+
+        return [
+            'available' => true,
+            'rate_percent' => $rate,
+            'rate_source' => "the highest-rate tax type ({$rateName})",
+            'recent_average' => [
+                'sales_gst' => $major($salesAverage),
+                'purchases_gst' => $major($purchasesAverage),
+                'net_gst' => $major($salesAverage - $purchasesAverage),
+            ],
+            'set_aside_per_month' => $major($setAside),
+            'months' => array_values($months),
+            'basis' => 'Net GST per month = GST on sales invoices less GST on supplier bills, averaged over '.count($window).' complete month(s). Invoices with no GST recorded, dated up to the day of the first invoice that records it, are treated as GST-inclusive at '.$rate.'%.',
+            'cautions' => [
+                'This is an estimate to help you put money aside, not your GST return. File from your actual return.',
+                'GST on direct expenses (not entered as bills) is not included, so purchases GST may be understated.',
+                'A tax-less invoice from that earlier period that was actually zero-rated would be overestimated.',
+            ],
+            '_set_aside_minor' => $setAside,
+        ];
+    }
+
+    /**
+     * Open GST recommendations from the Gst module, when it is installed.
+     *
+     * Optional by design: this module does not depend on it. A host without
+     * the module answers 404 and the section is simply absent; the GST figure
+     * above stands on its own.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function gstRecommendations(int $companyId, callable $major): ?array
+    {
+        try {
+            $response = $this->host->get('gst/recommendations', ['status' => 'new'], $companyId);
+        } catch (HostApiException) {
+            return null;
+        }
+
+        $rows = array_values(array_filter($response['data'] ?? [], 'is_array'));
+
+        return [
+            'source' => 'Gst module',
+            'open' => (int) ($response['open'] ?? count($rows)),
+            'gst_to_set_aside' => $major((float) ($response['to_set_aside'] ?? 0)),
+            'recommendations' => array_map(static fn (array $row): array => [
+                'action' => match ($row['kind'] ?? '') {
+                    'set_aside' => 'Set the GST from this payment aside',
+                    'no_gst_recorded' => 'Fix this invoice: it records no GST',
+                    'zero_rated' => 'Check this invoice: it looks zero-rated',
+                    default => (string) ($row['kind'] ?? ''),
+                },
+                'invoice' => $row['invoice_number'] ?? null,
+                'customer' => $row['customer'] ?? null,
+                'payment' => $major((float) ($row['payment_amount'] ?? 0)),
+                'gst' => $major((float) ($row['gst_amount'] ?? 0)),
+                'estimated' => (bool) ($row['estimated'] ?? false),
+            ], array_slice($rows, 0, 15)),
+        ];
     }
 
     /** @return array{0: string|null, 1: int} */
