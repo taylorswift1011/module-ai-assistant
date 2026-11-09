@@ -14,6 +14,9 @@ use InvoiceShelf\Modules\Contracts\Host\SettingsStore;
 use InvoiceShelf\Modules\Registry;
 use InvoiceShelf\Modules\Support\ModuleServiceProvider;
 use Modules\AiAssistant\Application\AiToolRegistry;
+use Modules\AiAssistant\Application\Host\HostApi;
+use Modules\AiAssistant\Application\Host\RouterHostApi;
+use Modules\AiAssistant\Application\Tools\GetBillTool;
 use Modules\AiAssistant\Application\Tools\GetCompanyStatsTool;
 use Modules\AiAssistant\Application\Tools\GetCustomerTool;
 use Modules\AiAssistant\Application\Tools\GetInvoiceTool;
@@ -23,9 +26,11 @@ use Modules\AiAssistant\Application\Tools\ListRecentPaymentsTool;
 use Modules\AiAssistant\Application\Tools\RankExpenseCategoriesTool;
 use Modules\AiAssistant\Application\Tools\RankTopCustomersTool;
 use Modules\AiAssistant\Application\Tools\RankTopItemsTool;
+use Modules\AiAssistant\Application\Tools\SearchBillsTool;
 use Modules\AiAssistant\Application\Tools\SearchCustomersTool;
 use Modules\AiAssistant\Application\Tools\SearchInvoicesTool;
 use Modules\AiAssistant\Application\Tools\SearchItemsTool;
+use Modules\AiAssistant\Application\Tools\SearchSuppliersTool;
 use Modules\AiAssistant\Drivers\ClaudeCliDriver;
 use Modules\AiAssistant\Drivers\LocalOpenAiDriver;
 use Modules\AiAssistant\Drivers\OpenRouterDriver;
@@ -41,6 +46,8 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
     {
         parent::register();
 
+        $this->app->bind(HostApi::class, RouterHostApi::class);
+
         $this->app->singleton(AiToolRegistry::class, function (Application $app): AiToolRegistry {
             return new AiToolRegistry($app->make(ModuleAuthorization::class), [
                 $app->make(SearchInvoicesTool::class), $app->make(GetInvoiceTool::class),
@@ -49,6 +56,8 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
                 $app->make(SearchItemsTool::class), $app->make(ListExpenseCategoriesTool::class),
                 $app->make(GetCompanyStatsTool::class), $app->make(RankTopCustomersTool::class),
                 $app->make(RankTopItemsTool::class), $app->make(RankExpenseCategoriesTool::class),
+                $app->make(SearchBillsTool::class), $app->make(GetBillTool::class),
+                $app->make(SearchSuppliersTool::class),
             ]);
         });
     }
