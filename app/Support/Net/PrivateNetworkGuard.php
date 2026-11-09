@@ -17,7 +17,26 @@ final class PrivateNetworkGuard
     /** @var list<string> */
     private const BLOCKED_IPV6 = ['::1/128', '::/128', 'fc00::/7', 'fe80::/10', '64:ff9b::/96', '2001:db8::/32'];
 
-    public static function blockedReason(string $url): ?string
+    /** The environment variable that names the private hosts a local AI server may live on. */
+    public const ALLOWED_HOSTS_ENV = 'AI_LOCAL_ALLOWED_HOSTS';
+
+    /**
+     * Why a URL may not be called, or null when it may.
+     *
+     * With `$allowConfiguredHosts` the host is also let through when the
+     * operator named it in AI_LOCAL_ALLOWED_HOSTS. Only the local AI driver
+     * asks for that; nothing an admin can type widens the list.
+     */
+    public static function blockedReason(string $url, bool $allowConfiguredHosts = false): ?string
+    {
+        $reason = self::reasonFor($url, $allowConfiguredHosts);
+
+        return $reason !== null && $allowConfiguredHosts
+            ? $reason.'. A local AI server must be named in the '.self::ALLOWED_HOSTS_ENV.' environment variable'
+            : $reason;
+    }
+
+    private static function reasonFor(string $url, bool $allowConfiguredHosts): ?string
     {
         $url = trim($url);
         if ($url === '') {
@@ -34,6 +53,9 @@ final class PrivateNetworkGuard
         if ($host === '') {
             return 'URL must include a host';
         }
+        if ($allowConfiguredHosts && self::isConfiguredHost($host, isset($parts['port']) ? (int) $parts['port'] : null)) {
+            return null;
+        }
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
             return self::ipIsBlocked($host) ? "URL host {$host} is a private or reserved address" : null;
         }
@@ -46,12 +68,57 @@ final class PrivateNetworkGuard
         return null;
     }
 
-    public static function assertAllowed(string $url): void
+    public static function assertAllowed(string $url, bool $allowConfiguredHosts = false): void
     {
-        $reason = self::blockedReason($url);
+        $reason = self::blockedReason($url, $allowConfiguredHosts);
         if ($reason !== null) {
             throw new BlockedUrlException($reason);
         }
+    }
+
+    /**
+     * Whether the operator named this host (and port) in AI_LOCAL_ALLOWED_HOSTS.
+     *
+     * The value is a comma-separated list of `host` or `host:port` entries, an
+     * IPv6 address in brackets. Matching is exact: no wildcards, no ranges, so
+     * naming one machine never opens its neighbours.
+     */
+    public static function isConfiguredHost(string $host, ?int $port): bool
+    {
+        $host = strtolower(trim($host, '[]'));
+
+        foreach (self::configuredHosts() as [$allowedHost, $allowedPort]) {
+            if ($allowedHost === $host && ($allowedPort === null || $allowedPort === $port)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return list<array{0: string, 1: int|null}> */
+    private static function configuredHosts(): array
+    {
+        $raw = getenv(self::ALLOWED_HOSTS_ENV);
+        $raw = is_string($raw) && $raw !== '' ? $raw : ($_ENV[self::ALLOWED_HOSTS_ENV] ?? $_SERVER[self::ALLOWED_HOSTS_ENV] ?? '');
+        $entries = [];
+
+        foreach (explode(',', is_string($raw) ? $raw : '') as $entry) {
+            $entry = strtolower(trim($entry));
+            if ($entry === '') {
+                continue;
+            }
+            if (preg_match('/^\[([^\]]+)\](?::(\d{1,5}))?$/', $entry, $m) === 1) {
+                $entries[] = [$m[1], isset($m[2]) ? (int) $m[2] : null];
+            } elseif (substr_count($entry, ':') === 1) {
+                [$name, $port] = explode(':', $entry);
+                $entries[] = [$name, ctype_digit($port) ? (int) $port : null];
+            } else {
+                $entries[] = [$entry, null];
+            }
+        }
+
+        return $entries;
     }
 
     public static function ipIsBlocked(string $ip): bool

@@ -17,6 +17,11 @@ final class AiConfigurationRequest extends FormRequest
         return true;
     }
 
+    private function driverAllowsConfiguredHosts(): bool
+    {
+        return (bool) (Registry::driverMeta('ai', (string) $this->input('ai_driver'))['allows_configured_hosts'] ?? false);
+    }
+
     private function driverRequiresApiKey(string $driver): bool
     {
         return (bool) (Registry::driverMeta('ai', $driver)['requires_api_key'] ?? true);
@@ -34,7 +39,7 @@ final class AiConfigurationRequest extends FormRequest
                     && $this->driverRequiresApiKey((string) $this->input('ai_driver'))),
                 'nullable', 'string', 'max:1000',
             ],
-            'ai_base_url' => ['nullable', 'url', 'max:500', new PublicHttpUrl],
+            'ai_base_url' => ['nullable', 'url', 'max:500', new PublicHttpUrl($this->driverAllowsConfiguredHosts())],
             'ai_chat_enabled' => ['nullable', Rule::in(['YES', 'NO'])],
             'ai_chat_model' => ['nullable', 'string', 'max:200'],
             'ai_text_generation_enabled' => ['nullable', Rule::in(['YES', 'NO'])],

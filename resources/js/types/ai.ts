@@ -18,6 +18,8 @@ export interface AiDriverOption {
   label: string
   website: string
   requires_api_key: boolean
+  /** The key is optional but sent when set, as a local server behind a proxy may want one. */
+  accepts_api_key?: boolean
   global_only: boolean
   default_base_url: string
   supported_roles: string[]

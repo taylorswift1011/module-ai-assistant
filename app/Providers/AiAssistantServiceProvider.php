@@ -27,6 +27,7 @@ use Modules\AiAssistant\Application\Tools\SearchCustomersTool;
 use Modules\AiAssistant\Application\Tools\SearchInvoicesTool;
 use Modules\AiAssistant\Application\Tools\SearchItemsTool;
 use Modules\AiAssistant\Drivers\ClaudeCliDriver;
+use Modules\AiAssistant\Drivers\LocalOpenAiDriver;
 use Modules\AiAssistant\Drivers\OpenRouterDriver;
 use Modules\AiAssistant\Lifecycle\DataCleanup;
 
@@ -81,6 +82,28 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
                 'type' => 'text',
                 'label' => 'Base URL',
                 'default' => 'https://openrouter.ai/api/v1',
+            ]],
+        ]);
+        Registry::registerAiDriver('local_openai', [
+            'class' => LocalOpenAiDriver::class,
+            'label' => 'Local AI (OpenAI-compatible)',
+            'website' => '',
+            'default_base_url' => 'http://localhost:11434/v1',
+            'requires_api_key' => false,
+            'accepts_api_key' => true,
+            'allows_configured_hosts' => true,
+            'global_only' => true,
+            'supported_roles' => ['chat', 'text_generation'],
+            'suggested_models' => [
+                ['value' => 'llama3.1', 'label' => 'Llama 3.1 (Ollama)'],
+                ['value' => 'qwen2.5', 'label' => 'Qwen 2.5 (Ollama)'],
+                ['value' => 'mistral', 'label' => 'Mistral (Ollama)'],
+            ],
+            'config_fields' => [[
+                'key' => 'base_url',
+                'type' => 'text',
+                'label' => 'Base URL of the OpenAI-compatible API',
+                'default' => 'http://localhost:11434/v1',
             ]],
         ]);
         Registry::registerAiDriver('claude_cli', [

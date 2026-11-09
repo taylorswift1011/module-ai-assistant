@@ -34,6 +34,16 @@ This fork adds a **Claude Code (subscription login)** provider. Instead of an AP
 
 The CLI runs with all of its own tools disabled; InvoiceShelf's read-only tools are offered to it as a JSON protocol in the prompt. The provider can only be selected globally by a super administrator, because it spends the server's login. Use of a subscription is subject to Anthropic's terms; this is intended for your own installation.
 
+## Local AI (OpenAI-compatible)
+
+This fork adds a **Local AI (OpenAI-compatible)** provider for a model you run yourself: Ollama, LM Studio, llama.cpp's server, vLLM, LocalAI, LiteLLM or anything else that serves `/chat/completions` and `/models`. Prompts and the business data the tools return stay on your network.
+
+1. Run the server and note its OpenAI base URL, for example `http://10.1.2.20:11434/v1` for Ollama.
+2. Name its host in the web server's environment: `AI_LOCAL_ALLOWED_HOSTS=10.1.2.20` (comma-separated `host` or `host:port` entries, exact matches only). Private addresses are refused unless the operator lists them here, so nothing typed into the settings page can point the server at an internal host. This includes `localhost`.
+3. In **Administration → Settings → AI Assistant**, choose the provider, set the Base URL, add an API key only if your server wants one, pick the model name the server uses, and click **Test connection**.
+
+Only a super administrator can select it. Redirects are not followed. The assistant's data tools rely on tool calling, so use a model that supports it; text generation works with any chat model.
+
 ## Privacy and access
 
 When someone uses a capability, their prompt and the business data that the selected model requests through the module's read-only tools are sent to OpenRouter and the chosen model provider. The assistant is scoped to the active company and respects the user's InvoiceShelf permissions; it cannot write invoices, expenses, customers, payments, or other business records.

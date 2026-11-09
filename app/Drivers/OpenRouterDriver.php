@@ -2,6 +2,7 @@
 
 namespace Modules\AiAssistant\Drivers;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use InvoiceShelf\Modules\Ai\Contracts\AiDriver;
 use InvoiceShelf\Modules\Ai\Data\AiChatResponse;
@@ -51,14 +52,13 @@ class OpenRouterDriver extends AiDriver
         ], fn ($v) => $v !== null);
 
         try {
-            $response = Http::withToken($this->apiKey)
-                ->timeout(self::TIMEOUT_SECONDS)
+            $response = $this->request(static::TIMEOUT_SECONDS)
                 ->acceptJson()
                 ->asJson()
                 ->post($endpoint, $payload);
         } catch (Throwable $e) {
             throw new AiException(
-                'OpenRouter request failed: '.$e->getMessage(),
+                $this->providerName().' request failed: '.$e->getMessage(),
                 'server_error',
                 0,
                 $e,
@@ -66,17 +66,17 @@ class OpenRouterDriver extends AiDriver
         }
 
         if ($response->status() === 401) {
-            throw new AiException('Invalid OpenRouter API key', 'invalid_key');
+            throw new AiException('Invalid '.$this->providerName().' API key', 'invalid_key');
         }
 
         if ($response->status() === 429) {
-            throw new AiException('OpenRouter rate limit exceeded', 'rate_limited');
+            throw new AiException($this->providerName().' rate limit exceeded', 'rate_limited');
         }
 
         if (! $response->successful()) {
             $errorBody = $response->json('error.message') ?? $response->body();
             throw new AiException(
-                'OpenRouter returned '.$response->status().': '.$errorBody,
+                $this->providerName().' returned '.$response->status().': '.$errorBody,
                 'server_error',
             );
         }
@@ -103,13 +103,12 @@ class OpenRouterDriver extends AiDriver
         $endpoint = $this->getBaseUrl().'/models';
 
         try {
-            $response = Http::withToken($this->apiKey)
-                ->timeout(30)
+            $response = $this->request(30)
                 ->acceptJson()
                 ->get($endpoint);
         } catch (Throwable $e) {
             throw new AiException(
-                'Unable to reach OpenRouter: '.$e->getMessage(),
+                'Unable to reach '.$this->providerName().': '.$e->getMessage(),
                 'server_error',
                 0,
                 $e,
@@ -117,12 +116,12 @@ class OpenRouterDriver extends AiDriver
         }
 
         if ($response->status() === 401) {
-            throw new AiException('Invalid OpenRouter API key', 'invalid_key');
+            throw new AiException('Invalid '.$this->providerName().' API key', 'invalid_key');
         }
 
         if (! $response->successful()) {
             throw new AiException(
-                'OpenRouter validation failed with status '.$response->status(),
+                $this->providerName().' validation failed with status '.$response->status(),
                 'server_error',
             );
         }
@@ -138,8 +137,7 @@ class OpenRouterDriver extends AiDriver
     public function listModels(): array
     {
         try {
-            $response = Http::withToken($this->apiKey)
-                ->timeout(30)
+            $response = $this->request(30)
                 ->acceptJson()
                 ->get($this->getBaseUrl().'/models');
         } catch (Throwable) {
@@ -212,6 +210,26 @@ class OpenRouterDriver extends AiDriver
         );
     }
 
+    /** The name used in error messages. */
+    protected function providerName(): string
+    {
+        return 'OpenRouter';
+    }
+
+    /** A request carrying the bearer token, when there is one. */
+    protected function request(int $timeout): PendingRequest
+    {
+        $request = $this->apiKey !== '' ? Http::withToken($this->apiKey) : Http::withHeaders([]);
+
+        return $request->timeout($timeout);
+    }
+
+    /** Throws when the configured base URL may not be called. */
+    protected function assertBaseUrlAllowed(string $url): void
+    {
+        PrivateNetworkGuard::assertAllowed($url);
+    }
+
     protected function getBaseUrl(): string
     {
         if ($this->validatedBaseUrl !== null) {
@@ -219,12 +237,12 @@ class OpenRouterDriver extends AiDriver
         }
 
         $configured = (string) ($this->config['base_url'] ?? '');
-        $url = rtrim($configured !== '' ? $configured : self::DEFAULT_BASE_URL, '/');
+        $url = rtrim($configured !== '' ? $configured : static::DEFAULT_BASE_URL, '/');
 
         // SSRF guard: never let an admin/owner-supplied base URL point the
         // server (with the bearer token attached) at a private/reserved host.
         try {
-            PrivateNetworkGuard::assertAllowed($url);
+            $this->assertBaseUrlAllowed($url);
         } catch (BlockedUrlException $exception) {
             throw new AiException('Invalid AI base URL: '.$exception->getMessage(), 'invalid_base_url', 0, $exception);
         }

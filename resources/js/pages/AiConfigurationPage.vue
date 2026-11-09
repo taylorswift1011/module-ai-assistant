@@ -32,12 +32,16 @@ const selectedDriver = computed(() => drivers.value.find((driver) => driver.valu
 const suggestedModels = computed(() => selectedDriver.value?.suggested_models ?? [])
 const fields = computed(() => selectedDriver.value?.config_fields ?? [])
 const needsKey = computed(() => selectedDriver.value?.requires_api_key ?? true)
+const acceptsKey = computed(() => selectedDriver.value?.accepts_api_key === true)
 const hasMaskedKey = computed(() => /[•*]/.test(form.ai_api_key))
 const visibleConfig = computed(() => props.scope === 'admin' || isCustom.value)
 
-watch(() => form.ai_driver, (driver) => {
+watch(() => form.ai_driver, (driver, previous) => {
   const selected = drivers.value.find((item) => item.value === driver)
-  if (selected?.default_base_url && !form.ai_base_url) form.ai_base_url = selected.default_base_url
+  const before = drivers.value.find((item) => item.value === previous)
+  // Replace an empty URL, or the previous provider's own default, but never one the admin typed.
+  const untouched = !form.ai_base_url || form.ai_base_url === before?.default_base_url
+  if (untouched) form.ai_base_url = selected?.default_base_url ?? ''
 })
 
 onMounted(() => { void load() })
@@ -164,9 +168,10 @@ function updateExtraField(key: string, event: Event): void {
             <label class="block text-sm font-medium text-heading">Provider
               <select v-model="form.ai_driver" class="mt-1 w-full rounded-md border border-line-default bg-surface px-3 py-2 text-body" @change="onDriverChange"><option v-for="driver in drivers" :key="driver.value" :value="driver.value">{{ driver.label }}</option></select>
             </label>
-            <p v-if="!needsKey" class="-mt-3 text-xs text-muted">Uses the Claude subscription that the server's <code>claude</code> CLI is logged in with (run <code>claude login</code> as the web server user). No API key is stored.</p>
+            <p v-if="acceptsKey" class="-mt-3 text-xs text-muted">Any server that speaks the OpenAI API (Ollama, LM Studio, llama.cpp, vLLM, LiteLLM). A server on a private address must be listed by the operator in the <code>AI_LOCAL_ALLOWED_HOSTS</code> environment variable. Chat tools need a model that supports tool calling.</p>
+            <p v-else-if="!needsKey" class="-mt-3 text-xs text-muted">Uses the Claude subscription that the server's <code>claude</code> CLI is logged in with (run <code>claude login</code> as the web server user). No API key is stored.</p>
             <p v-else-if="selectedDriver?.website" class="-mt-3 text-xs text-muted">Get an API key from <a class="text-primary-500 underline" :href="selectedDriver.website" target="_blank" rel="noopener noreferrer">{{ selectedDriver.label }}</a>.</p>
-            <label v-if="needsKey" class="block text-sm font-medium text-heading">API key
+            <label v-if="needsKey || acceptsKey" class="block text-sm font-medium text-heading">API key{{ needsKey ? '' : ' (optional)' }}
               <span class="mt-1 flex gap-2"><input v-model="form.ai_api_key" :type="showKey ? 'text' : 'password'" autocomplete="new-password" class="min-w-0 flex-1 rounded-md border border-line-default bg-surface px-3 py-2 text-body" :placeholder="hasMaskedKey ? 'Stored securely — enter a new key to replace it' : ''"><button type="button" class="rounded border border-line-default px-3 text-xs text-body hover:bg-hover" @click="showKey = !showKey">{{ showKey ? 'Hide' : 'Show' }}</button></span>
               <span class="mt-1 block text-xs font-normal text-muted">Keys are stored securely. Leave the masked value unchanged to keep the current key.</span>
             </label>

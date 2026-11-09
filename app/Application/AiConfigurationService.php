@@ -119,6 +119,12 @@ class AiConfigurationService
         return (bool) (Registry::driverMeta('ai', $driver)['global_only'] ?? false);
     }
 
+    /** Whether a driver may call a private host the operator named for it. */
+    public function driverAllowsConfiguredHosts(string $driver): bool
+    {
+        return (bool) (Registry::driverMeta('ai', $driver)['allows_configured_hosts'] ?? false);
+    }
+
     /** @return array<int, array<string, mixed>> */
     public function listDrivers(): array
     {
@@ -128,6 +134,7 @@ class AiConfigurationService
             'website' => $meta['website'] ?? '',
             'requires_api_key' => (bool) ($meta['requires_api_key'] ?? true),
             'global_only' => (bool) ($meta['global_only'] ?? false),
+            'accepts_api_key' => (bool) ($meta['accepts_api_key'] ?? false),
             'default_base_url' => $meta['default_base_url'] ?? '',
             'supported_roles' => $meta['supported_roles'],
             'suggested_models' => $meta['suggested_models'],
