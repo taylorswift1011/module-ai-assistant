@@ -137,30 +137,50 @@ class OpenRouterDriver extends AiDriver
     public function listModels(): array
     {
         try {
-            $response = $this->request(30)
-                ->acceptJson()
-                ->get($this->getBaseUrl().'/models');
-        } catch (Throwable) {
+            return $this->fetchModels();
+        } catch (AiException) {
             return [];
+        }
+    }
+
+    /**
+     * The models the endpoint offers, or the reason it could not say.
+     *
+     * @return array<int, array{value: string, label: string}>
+     *
+     * @throws AiException
+     */
+    public function fetchModels(): array
+    {
+        $endpoint = $this->getBaseUrl().'/models';
+
+        try {
+            $response = $this->request(30)->acceptJson()->get($endpoint);
+        } catch (Throwable $e) {
+            throw new AiException('Unable to reach '.$this->providerName().': '.$e->getMessage(), 'server_error', 0, $e);
+        }
+
+        if ($response->status() === 401 || $response->status() === 403) {
+            throw new AiException('Invalid '.$this->providerName().' API key', 'invalid_key');
         }
 
         if (! $response->successful()) {
-            return [];
+            throw new AiException($this->providerName().' returned '.$response->status().' for its model list', 'server_error');
         }
 
-        $models = $response->json('data', []);
+        // OpenAI-style servers answer {"data": [...]}; Ollama's native list answers {"models": [...]}.
+        $models = $response->json('data') ?? $response->json('models') ?? [];
+        $listed = [];
 
-        if (! is_array($models)) {
-            return [];
+        foreach (is_array($models) ? $models : [] as $model) {
+            $id = is_array($model) ? (string) ($model['id'] ?? $model['model'] ?? $model['name'] ?? '') : '';
+            if ($id !== '') {
+                $listed[$id] = ['value' => $id, 'label' => (string) ($model['name'] ?? $id)];
+            }
         }
+        ksort($listed, SORT_NATURAL | SORT_FLAG_CASE);
 
-        return array_map(
-            fn (array $m): array => [
-                'value' => $m['id'] ?? '',
-                'label' => $m['name'] ?? ($m['id'] ?? ''),
-            ],
-            $models,
-        );
+        return array_values($listed);
     }
 
     /**

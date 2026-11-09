@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use InvoiceShelf\Modules\Ai\Exceptions\AiException;
 use Modules\AiAssistant\Application\AiConfigurationService;
 use Modules\AiAssistant\Drivers\AiDriverFactory;
+use Modules\AiAssistant\Drivers\OpenRouterDriver;
 
 abstract class AiConfigurationController extends ModuleController
 {
@@ -37,6 +38,31 @@ abstract class AiConfigurationController extends ModuleController
         }
 
         return response()->json(['success' => true, 'details' => $details]);
+    }
+
+    /**
+     * The models the configured server offers, so the settings page can list them.
+     *
+     * @param  array<string, mixed>  $values
+     * @param  array<string, mixed>  $stored
+     */
+    protected function listModelsFor(array $values, array $stored): JsonResponse
+    {
+        $key = $values['ai_api_key'] ?? '';
+        $key = in_array($key, ['', '********'], true) ? ($stored['ai_api_key'] ?? '') : $key;
+
+        try {
+            $driver = AiDriverFactory::make(
+                (string) $values['ai_driver'],
+                (string) $key,
+                ['base_url' => $values['ai_base_url'] ?? null],
+            );
+            $models = $driver instanceof OpenRouterDriver ? $driver->fetchModels() : $driver->listModels();
+        } catch (AiException $exception) {
+            return response()->json(['error' => $exception->errorKey, 'message' => $exception->getMessage()], 422);
+        }
+
+        return response()->json(['models' => $models]);
     }
 
     /** @param array<string, mixed> $config @return array<string, mixed> */

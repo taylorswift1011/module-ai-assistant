@@ -36,6 +36,17 @@ final class CompanyAiConfigurationController extends AiConfigurationController
         return response()->json(['success' => true]);
     }
 
+    public function models(ConnectionTestRequest $request): JsonResponse
+    {
+        $this->authorizeAbility('owner only');
+
+        if ($this->configuration->driverIsGlobalOnly((string) $request->validated()['ai_driver'])) {
+            return response()->json(['error' => 'global_only_driver', 'message' => 'This provider can only be set by a super admin.'], 422);
+        }
+
+        return $this->listModelsFor($request->validated(), $this->configuration->getCompanyConfig((int) $request->header('company')));
+    }
+
     public function testConnection(ConnectionTestRequest $request): JsonResponse
     {
         $this->authorizeAbility('owner only');

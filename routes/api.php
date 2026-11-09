@@ -15,12 +15,14 @@ Route::prefix('api/v1')->middleware(['api', 'auth:sanctum'])->group(function ():
     Route::get('ai/config', [AiConfigurationController::class, 'getConfig']);
     Route::post('ai/config', [AiConfigurationController::class, 'saveConfig']);
     Route::post('ai/test', [AiConfigurationController::class, 'testConnection']);
+    Route::post('ai/models', [AiConfigurationController::class, 'models']);
 });
 
 Route::prefix('api/v1')->middleware(['api', 'auth:sanctum', 'company', 'bouncer'])->group(function (): void {
     Route::get('company/ai/config', [CompanyAiConfigurationController::class, 'getConfig']);
     Route::post('company/ai/config', [CompanyAiConfigurationController::class, 'saveConfig']);
     Route::post('company/ai/test', [CompanyAiConfigurationController::class, 'testConnection']);
+    Route::post('company/ai/models', [CompanyAiConfigurationController::class, 'models']);
     Route::get('ai/capabilities', CapabilitiesController::class);
     Route::middleware('throttle:ai-assistant')->group(function (): void {
         Route::post('ai/chat', ChatController::class);

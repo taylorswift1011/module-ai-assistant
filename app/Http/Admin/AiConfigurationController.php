@@ -37,6 +37,13 @@ final class AiConfigurationController extends BaseAiConfigurationController
         return response()->json(['ai_drivers' => $this->configuration->listDrivers()]);
     }
 
+    public function models(ConnectionTestRequest $request): JsonResponse
+    {
+        $this->authorizeAbility('manage ai config');
+
+        return $this->listModelsFor($request->validated(), $this->configuration->getGlobalConfig());
+    }
+
     public function testConnection(ConnectionTestRequest $request): JsonResponse
     {
         $this->authorizeAbility('manage ai config');

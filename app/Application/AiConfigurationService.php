@@ -135,6 +135,7 @@ class AiConfigurationService
             'requires_api_key' => (bool) ($meta['requires_api_key'] ?? true),
             'global_only' => (bool) ($meta['global_only'] ?? false),
             'accepts_api_key' => (bool) ($meta['accepts_api_key'] ?? false),
+            'fetches_models' => (bool) ($meta['fetches_models'] ?? false),
             'default_base_url' => $meta['default_base_url'] ?? '',
             'supported_roles' => $meta['supported_roles'],
             'suggested_models' => $meta['suggested_models'],

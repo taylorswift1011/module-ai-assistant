@@ -94,11 +94,8 @@ final class AiAssistantServiceProvider extends ModuleServiceProvider
             'allows_configured_hosts' => true,
             'global_only' => true,
             'supported_roles' => ['chat', 'text_generation'],
-            'suggested_models' => [
-                ['value' => 'llama3.1', 'label' => 'Llama 3.1 (Ollama)'],
-                ['value' => 'qwen2.5', 'label' => 'Qwen 2.5 (Ollama)'],
-                ['value' => 'mistral', 'label' => 'Mistral (Ollama)'],
-            ],
+            'fetches_models' => true,
+            'suggested_models' => [],
             'config_fields' => [[
                 'key' => 'base_url',
                 'type' => 'text',

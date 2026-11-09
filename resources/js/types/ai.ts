@@ -20,6 +20,8 @@ export interface AiDriverOption {
   requires_api_key: boolean
   /** The key is optional but sent when set, as a local server behind a proxy may want one. */
   accepts_api_key?: boolean
+  /** The model list comes from the server itself, not from a built-in list. */
+  fetches_models?: boolean
   global_only: boolean
   default_base_url: string
   supported_roles: string[]
